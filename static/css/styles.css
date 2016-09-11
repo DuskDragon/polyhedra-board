@@ -23,6 +23,11 @@ input, button, select
   font-size: 9px;
 }
 
+.main-title
+{
+  color: #2a9fd6;
+}
+
 .super-table
 {
   width: 90%;
@@ -32,32 +37,53 @@ input, button, select
 
 .kb-table
 {
+  width: 100%;
   border: 1px solid #444444;
   border-collapse: separate;
   border-spacing: 1px;
   color: #cccccc;
+}
+
+.ship-icon
+{
+  text-align: center;
+  border: 0px;
+  border-spacing: 0px;
+}
+
+.alliance-icon
+{
+  text-align: center;
+  border: 0px;
+  border-spacing: 0px;
 }
 
 .stats-table
 {
+  width: 100%;
   border: 1px solid #444444;
   border-collapse: separate;
   border-spacing: 1px;
   color: #cccccc;
 }
 
-.kb-table-title
-{
-  height: 10px;
-}
-
 .kb-table-header
 {
-  height: 15px;
+  height: 20px;
+  border: none;
   background: #555555;
   font-size: 14px;
   font-weight: bold;
-  padding: 4px;
+}
+
+.kb-table-row-date
+{
+  color: #cccccc;
+}
+
+.kb-table-row-date:hover
+{
+  background: #191919;
 }
 
 .kb-table-row-even-kill
@@ -72,7 +98,7 @@ input, button, select
 
 .kb-table-row-even-loss
 {
-  background: #a00000;
+  background: #900000;
 }
 
 .kb-table-row-odd-loss
