@@ -1,0 +1,87 @@
+.jumbotron {
+  background-size: cover;
+  
+  .page-title {
+    color: #2a9fd6;
+    text-shadow: 1px 1px #333;
+  }
+  
+  img {
+    margin-left:auto;
+    margin-right:auto;
+  }
+}
+
+$success-color: #005000;
+$success-hover: #004e7a;
+
+$danger-color: #900000;
+$danger-hover: #dd9300;
+
+@mixin gradient ($color) {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.0) 0%, rgba($color, 0.65) 100%);
+}
+
+@mixin transition () {
+  transition: 0.2s ease-in all;
+}
+
+.table-kbstats {
+  .row-month {
+    background-color: #111;
+    font-weight: normal;
+  }
+  
+  .row-kill {
+    @include transition();
+    background-color: $success-color;
+    
+    &:nth-child(2n) {
+      background-color: darken($success-color, 7%);
+    }
+    
+    &:hover {
+      @include transition();
+      background-color: $success-hover;
+    }
+  }
+
+  .row-loss {
+    @include transition();
+    background-color: $danger-color;
+    
+    &:nth-child(2n) {
+      background-color: darken($danger-color, 8%);
+    }
+    
+    &:hover {
+      @include transition();
+      background-color: $danger-hover;
+    }
+  }
+  
+  // Center Location
+  td:last-child {
+    text-align: center;
+  }
+  
+  img {
+    float: left;
+    display: block;
+    margin-right: 0.5em;
+    
+    @media (max-width: 667px) {
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  span.name {
+    display: block;
+  }
+}
+
+// Pointer for hover
+.table-hover > tbody > tr:hover {
+  cursor: pointer;
+}

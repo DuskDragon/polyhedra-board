@@ -1,135 +1,71 @@
-html, body
-{
-  margin: 0px;
-  color: #dfdfdf;
-  padding: 0px;
-  height: 100%;
-  background-color: #000000;
+.jumbotron {
+	background-size: cover;
 }
 
-font,th,td,p,a,div
-{
-  font-family: Verdana, "Bitstream Vera Sans", Arial, Helvetica;
+.jumbotron img {
+    margin-left:auto;
+    margin-right:auto;
 }
 
-td
-{
-  padding: 1px;
+.jumbotron .page-title {
+	text-shadow: 1px 1px #333;
+    color: #2a9fd6;
 }
 
-input, button, select
-{
-  border: 1px solid #eeeeee;
-  font-size: 9px;
+.table-kbstats .row-month {
+	background-color: #111;
+	font-weight: normal;
 }
 
-.main-title
-{
-  color: #2a9fd6;
+.table-kbstats .row-kill {
+	transition: 0.2s ease-in all;
+	background-color: #005000;
 }
 
-.super-table
-{
-  width: 90%;
-  margin: auto;
-  padding: 10px;
+.table-kbstats .row-kill:nth-child(2n) {
+	background-color: #002c00;
 }
 
-.kb-table
-{
-  width: 100%;
-  border: 1px solid #444444;
-  border-collapse: separate;
-  border-spacing: 0px;
-  color: #cccccc;
+.table-kbstats .row-kill:hover {
+	transition: 0.2s ease-in all;
+	background-color: #004e7a;
 }
 
-.ship-icon
-{
-  text-align: center;
-  border: 0px;
-  border-spacing: 0px;
+.table-kbstats .row-loss {
+	transition: 0.2s ease-in all;
+	background-color: #900000;
 }
 
-.alliance-icon
-{
-  text-align: center;
-  border: 0px;
-  border-spacing: 0px;
+.table-kbstats .row-loss:nth-child(2n) {
+	background-color: #670000;
 }
 
-.stats-table
-{
-  width: 100%;
-  border: 1px solid #444444;
-  border-collapse: separate;
-  border-spacing: 1px;
-  color: #cccccc;
+.table-kbstats .row-loss:hover {
+	transition: 0.2s ease-in all;
+	background-color: #dd9300;
 }
 
-.kb-table-header
-{
-  height: 20px;
-  border: none;
-  background: #555555;
-  font-size: 14px;
-  font-weight: bold;
+.table-kbstats td:last-child {
+	text-align: center;
 }
 
-.kb-table-row-date
-{
-  color: #cccccc;
+.table-kbstats img {
+	float: left;
+	display: block;
+	margin-right: 0.5em;
 }
 
-.kb-table-row-date:hover
-{
-  background: #191919;
+@media (max-width: 667px) {
+	.table-kbstats img {
+		width: 20px;
+		height: 20px;
+	}
 }
 
-.kb-table-row-even-kill
-{
-  background: #005000;
+.table-kbstats span.name {
+	display: block;
 }
 
-.kb-table-row-odd-kill
-{
-  background: #003000;
-}
-
-.kb-table-row-even-loss
-{
-  background: #900000;
-}
-
-.kb-table-row-odd-loss
-{
-  background: #700000;
-}
-
-.kb-table-row-even-kill:hover
-{
-  color: #FFFFFF;
-  background: #004E7A;
-  cursor: pointer;
-}
-
-.kb-table-row-odd-kill:hover
-{
-  color: #FFFFFF;
-  background: #004E7A;
-  cursor: pointer;
-}
-
-.kb-table-row-odd-loss:hover
-{
-  color: #222222;
-  background: #DD9300;
-  cursor: pointer;
-}
-
-.kb-table-row-even-loss:hover
-{
-  color: #222222;
-  background: #DD9300;
-  cursor: pointer;
+.table-hover > tbody > tr:hover {
+	cursor: pointer;
 }
