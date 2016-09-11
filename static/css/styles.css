@@ -40,7 +40,7 @@ input, button, select
   width: 100%;
   border: 1px solid #444444;
   border-collapse: separate;
-  border-spacing: 1px;
+  border-spacing: 0px;
   color: #cccccc;
 }
 
