@@ -1,6 +1,7 @@
 
 <html>
-    <head/>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Polyhedra Killboard</title>
     <script type="text/javascript">
         var imageUrls = [
@@ -10,7 +11,7 @@
            , "http://i.imgur.com/ZuywHbC.png"
            , "http://i.imgur.com/BkqEvW4.gif"
            , "http://i.imgur.com/I6F2msY.png"
-];
+        ];
 
       function getImageHtmlCode() {
         var dataIndex = Math.floor(Math.random() * imageUrls.length);
@@ -23,108 +24,117 @@
     <style>
     html, body
     {
-    margin: 0px;
-    color: #dfdfdf;
-    padding: 0px;
-    height: 100%;
-    background-color: #000000;
+      margin: 0px;
+      color: #dfdfdf;
+      padding: 0px;
+      height: 100%;
+      background-color: #000000;
     }
     
     font,th,td,p,a,div
     {
-    font-family: Verdana, "Bitstream Vera Sans", Arial, Helvetica;
+      font-family: Verdana, "Bitstream Vera Sans", Arial, Helvetica;
     }
     
     td
     {
-    padding: 1px;
+      padding: 1px;
     }
     
     input, button, select
     {
-    border: 1px solid #eeeeee;
-    font-size: 9px;
+      border: 1px solid #eeeeee;
+      font-size: 9px;
     }
     
-    .kb-table, .kb-subtable
+    .super-table
     {
-    font-size: 10px;
-    color: #e0e0e0;
-    padding: 0px;
+      width: 90%;
+      margin: auto;
+      padding: 10px;
     }
     
     .kb-table
     {
-    border: 1px solid #444444;
-    border-collapse: separate;
-    border-spacing: 1px;
+      border: 1px solid #444444;
+      border-collapse: separate;
+      border-spacing: 1px;
+      color: #cccccc;
+    }
+    
+    .stats-table
+    {
+      border: 1px solid #444444;
+      border-collapse: separate;
+      border-spacing: 1px;
+      color: #cccccc;
     }
     
     .kb-table-title
     {
-    height: 10px;
+      height: 10px;
     }
     
     .kb-table-header
     {
-    height: 15px;
-    background: #555555;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 4px;
+      height: 15px;
+      background: #555555;
+      font-size: 14px;
+      font-weight: bold;
+      padding: 4px;
     }
     
     .kb-table-row-even-kill
     {
-    background: #005000;
+      background: #005000;
     }
     
     .kb-table-row-odd-kill
     {
-    background: #004000;
+      background: #003000;
     }
     
     .kb-table-row-even-loss
     {
-    background: #a00000;
+      background: #a00000;
     }
     
     .kb-table-row-odd-loss
     {
-    background: #900000;
+      background: #700000;
     }
     
     .kb-table-row-even-kill:hover
     {
-    color: #FFFFFF;
-    background: #0083CC;
-    cursor: pointer;
+      color: #FFFFFF;
+      background: #0083CC;
+      cursor: pointer;
     }
     
     .kb-table-row-odd-kill:hover
     {
-    color: #FFFFFF;
-    background: #0083CC;
-    cursor: pointer;
+      color: #FFFFFF;
+      background: #0083CC;
+      cursor: pointer;
     }
     
     .kb-table-row-odd-loss:hover
     {
-    color: #222222;
-    background: #DD9300;
-    cursor: pointer;
+      color: #222222;
+      background: #DD9300;
+      cursor: pointer;
     }
     
     .kb-table-row-even-loss:hover
     {
-    color: #222222;
-    background: #DD9300;
-    cursor: pointer;
+      color: #222222;
+      background: #DD9300;
+      cursor: pointer;
     }
-</style>
+    </style>
     </head>
 
-<body bgcolor="black">
+<body>
 <script type="text/javascript">
   document.write(getImageHtmlCode());
 </script>
@@ -133,8 +143,11 @@
 <p>a personal Eve tool</p></font>
 <p><font color="#cccccc">August, 2016</font>
 
-<font color="#cccccc">
-<table style="margin-left: auto; margin-right: auto; text-align: left; color: #cccccc" cellspacing="1" >
+<table class="super-table">
+<tbody>
+<tr>
+<td>
+<table class="kb-table">
     <tbody>
         <tr>
             <td>ShipType</td>
@@ -142,15 +155,54 @@
             <td>Final Blow</td>
             <td>Location</td>
         </tr>
-        <tr>
+        <tr class="kb-table-row-even-kill">
             <td>Spaceship</td>
-            <td>Character Name</td>
-            <td>Character Name</td>
+            <td>Enemy Character Name</td>
+            <td>Friendly Character Name</td>
+            <td>TVN-FM</td>
+        </tr>
+        <tr class="kb-table-row-odd-loss">
+            <td>Spaceship</td>
+            <td>Friendly Character Name</td>
+            <td>Enemy Character Name</td>
+            <td>TVN-FM</td>
+        </tr>
+        <tr class="kb-table-row-even-kill">
+            <td>Spaceship</td>
+            <td>Enemy Character Name</td>
+            <td>Friendly Character Name</td>
+            <td>TVN-FM</td>
+        </tr>
+        <tr class="kb-table-row-odd-kill">
+            <td>Spaceship</td>
+            <td>Enemy Character Name</td>
+            <td>Friendly Character Name</td>
+            <td>TVN-FM</td>
+        </tr>
+        <tr class="kb-table-row-even-loss">
+            <td>Spaceship</td>
+            <td>Friendly Character Name</td>
+            <td>Enemy Character Name</td>
+            <td>TVN-FM</td>
+        </tr>
+        <tr class="kb-table-row-odd-loss">
+            <td>Spaceship</td>
+            <td>Friendly Character Name</td>
+            <td>Enemy Character Name</td>
             <td>TVN-FM</td>
         </tr>
     </tbody>
 </table>
-</font>
+</td>
+<td>
+<table class="stats-table">
+    <tbody>
+        <tr class="stats-header"><td>Active PVP</td></tr>
+        <tr><td>Characters</td><td>3</td></tr>
+        <tr><td>Ships</td><td>4</td></tr>
+        <tr><td>Total Kills</td><td>30</td></tr>
+    </tbody>
+</table>
 
 </body>
 </html>
