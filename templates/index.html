@@ -1,0 +1,45 @@
+
+
+<!doctype html>
+    <head>
+    <title>Polyhedra Killboard</title>
+    <link rel=stylesheet href="{{ url_for('static', filename='css/styles.css') }}">
+    </head>
+
+<body bgcolor="black">
+    <center>
+    <img id="banner" />
+<font color="#2a9fd6">
+<center><h1>Polyhedra</h1></center>
+<p>a personal Eve tool</p></font>
+<p><font color="#cccccc">August, 2016</font>
+
+
+<font color="#cccccc">
+<table style="margin-left: auto; margin-right: auto; text-align: left; color: #cccccc" cellspacing="1" >
+    <tbody>
+        <tr>
+            <td>ShipType</td>
+            <td>Pilot</td>
+            <td>Final Blow</td>
+            <td>Location</td>
+        </tr>
+        <tr>
+            <td>Spaceship</td>
+            <td>Character Name</td>
+            <td>Character Name</td>
+            <td>TVN-FM</td>
+        </tr>
+    </tbody>
+</table>
+</font>
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/banner.js')}}"></script>
+<script type="text/javascript">
+    document.getElementById("banner").src = getRandomBannerImage();
+</script>
+</body>
+
+
+</html>
+
