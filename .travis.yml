@@ -1,7 +1,0 @@
-language: python
-python:
-    - "2.7"
-env:
-    global:
-    - ENCRYPTION_LABEL: b6b2e430a6d3
-script: bash ./deploy.sh
