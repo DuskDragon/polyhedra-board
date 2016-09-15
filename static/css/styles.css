@@ -1,3 +1,7 @@
+.greytext {
+    color: #cccccc;
+}
+
 .jumbotron {
 	background-size: cover;
 }
@@ -19,7 +23,7 @@
 
 .table-kbstats .row-kill {
 	transition: 0.2s ease-in all;
-	background-color: #005000;
+	background-color: #194119;
 }
 
 .table-kbstats .row-kill:nth-child(2n) {
@@ -33,7 +37,7 @@
 
 .table-kbstats .row-loss {
 	transition: 0.2s ease-in all;
-	background-color: #900000;
+	background-color: #761919;
 }
 
 .table-kbstats .row-loss:nth-child(2n) {
@@ -54,13 +58,20 @@
     background-color: #840778;
 }
 
-.table-kbstats .row-friendlyfire :hover {
+.table-kbstats .row-friendlyfire:hover {
     transition: 0.2s ease-in all;
     background-color: #0a8bbd;
 }
 
 .table-kbstats td:last-child {
 	text-align: center;
+}
+
+table a:not(.btn),
+.table a:not(.btn){
+    color: #2a9fd6;
+    text-decoration: none;
+    background: transparent;
 }
 
 .table-kbstats img {
