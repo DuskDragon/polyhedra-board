@@ -45,6 +45,20 @@
 	background-color: #dd9300;
 }
 
+.table-kbstats .row-friendlyfire {
+    transition: 0.2s ease-in all;
+    background-color: #aa099a;
+}
+
+.table-kbstats .row-friendlyfire:nth-child(2n) {
+    background-color: #840778;
+}
+
+.table-kbstats .row-friendlyfire :hover {
+    transition: 0.2s ease-in all;
+    background-color: #0a8bbd;
+}
+
 .table-kbstats td:last-child {
 	text-align: center;
 }
