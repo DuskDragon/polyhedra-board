@@ -193,6 +193,7 @@ def index():
     return render_template('index.html', **zKill.data)
 
 if __name__ == "__main__":
+    print 'test'
     if len(sys.argv) > 2 and sys.argv[2] == 'debug':
         logging.basicConfig(level=logging.DEBUG)
     if len(sys.argv) > 1 and sys.argv[1] == 'build':
