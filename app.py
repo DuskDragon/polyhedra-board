@@ -41,6 +41,25 @@ class zKillAPI():
             self.most_recent_killID = self.history[-1]["killID"]
         logging.info('zKillAPI.most_recent_killID=' + str(self.most_recent_killID))
 
+        #load ship_lookup (ID dictionary) json
+        try:
+            with open('out/data/ship_lookup.json', 'r') as fd:
+                self.ship_lookup = json.load(fd)
+        except IOError:
+            with open('out/data/ship_lookup.json', 'a') as faild:
+                json.dump({}, faild)
+            self.ship_lookup = {}
+
+        #load solarsystem_lookup (ID dictionary) json
+        try:
+            with open('out/data/solarsystem_lookup.json', 'r') as fd:
+                self.solarsystem_lookup = json.load(fd)
+        except IOError:
+            with open('out/data/solarsystem_lookup.json', 'a') as faild:
+                json.dump({}, faild)
+            self.solarsystem_lookup = {}
+
+
     def update_kill_history(self):
         api_call_charID_list = ','.join(str(x) for x in self.character_list.values())
         api_call_frontstr = "http://zkillboard.com/api/character/"
@@ -163,9 +182,30 @@ class zKillAPI():
             kills[kill['killTime'].split(' ')[0]].append(kill)
         return sorted(kills.items(), key=lambda x: x[0], reverse=True)
 
-    def write_to_file(self):
+    def tag_solarSystemName(self):
+        pass
+
+    def tag_shipTypeID(self):
+        for mail in self.history:
+            if mail['victim'].get('shipTypeName', None) != None:
+                continue
+            #if shipTypeID present in self.ship_lookup don't call the zkill api
+            temp_ship_name = self.ship_lookup.get(mail['victim']['shipTypeID'], None)
+            if temp_ship_name != None:
+                mail['victim']['shipTypeName'] = temp_ship_name
+            else: #better call ccp? TODO example: https://api.eveonline.com/eve/TypeName.xml.aspx?ids=603
+                time.sleep(5) # 'be polite' with requests
+                api_call_front_str = 'https://api.eveonline.com/eve/TypeName.xml.aspx?ids='
+                api_result = requests.get(api_call_front_str+str(mail['victim']['shipTypeID'])).json()
+                mail['victim']['shipTypeName'] = api_result.
+
+    def write_data_to_file(self):
         with open('out/data/history.json', 'w') as outfile:
             json.dump(self.history, outfile)
+        with open('out/data/ship_lookup.json', 'w') as outfile:
+            json.dump(self.ship_lookup, outfile)
+        with open('out/data/solarsystem_lookup.json', 'w') as outfile:
+            json.dump(self.solarsystem_lookup, outfile)
 
     def build(self):
         self.update_kill_history()
@@ -173,7 +213,9 @@ class zKillAPI():
         self.tag_as_kill_loss_or_friendly_fire()
         self.tag_involved_characters()
         self.tag_formatted_values()
-        self.write_to_file()
+        self.tag_solarSystemName()
+        self.tag_shipTypeID()
+        self.write_data_to_file()
 
     @property
     def data(self):
@@ -203,11 +245,7 @@ if __name__ == "__main__":
         zKill = zKillAPI()
         while zKill.update_kill_history() != 1:
             time.sleep(10)
-        zKill.prune_unused_history_fields()
-        zKill.tag_as_kill_loss_or_friendly_fire()
-        zKill.tag_involved_characters()
-        zKill.tag_formatted_values()
-        zKill.write_to_file()
+        zKill.build()
     else:
         app.run(debug=True, host='0.0.0.0')
 
