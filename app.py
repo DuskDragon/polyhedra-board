@@ -199,7 +199,12 @@ class zKillAPI():
                 api_result = requests.get(api_call_front_str+str(mail['victim']['shipTypeID'])).json()
                 mail['victim']['shipTypeName'] = api_result.
 
-    def write_data_to_file(self):
+    def use_character(self, charid):
+        cs = {v:k for k,v in self.character_list.items()}
+        charname = cs[charid]
+        self.history = [x for x in self.history if charname in x['our_characters'] or charname == x['victim']['characterName']]
+
+    def write_to_file(self):
         with open('out/data/history.json', 'w') as outfile:
             json.dump(self.history, outfile)
         with open('out/data/ship_lookup.json', 'w') as outfile:
@@ -222,17 +227,29 @@ class zKillAPI():
         result = {'kills':           self.kill_counts('row-kill'),
                   'losses':          self.kill_counts('row-loss'),
                   'history':         self.kills_by_date(),
+                  'characters':      sorted(self.character_list.items()),
                   'money_lost':      self.kill_sums('row-loss'),
                   'money_killed':    self.kill_sums('row-kill'),
                   'friendlyfire':    self.kill_counts('row-friendlyfire'),
                   'character_count': len(self.character_list)}
         return result
 
-@app.route('/')
-def index():
+@app.route('/', defaults={'charid': None})
+@app.route('/<int:charid>/')
+def index(charid):
     zKill = zKillAPI()
     zKill.build()
+    if charid:
+        zKill.use_character(charid)
     return render_template('index.html', **zKill.data)
+
+@freezer.register_generator
+def index():
+    zKill = zKillAPI()
+    for x in zKill.character_list.values():
+        yield {'charid': x}
+    yield {'charid': None}
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[2] == 'debug':
