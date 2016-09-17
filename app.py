@@ -192,7 +192,7 @@ class zKillAPI():
             if temp_solarsystem_name != None:
                 mail['solarSystemName'] = temp_solarsystem_name
             else: #better call ccp example: https://crest-tq.eveonline.com/solarsystems/30002022/
-                time.sleep(0.15) # 'be polite' with requests
+                time.sleep(1) # 'be polite' with requests
                 api_call_front_str = 'https://crest-tq.eveonline.com/solarsystems/'
                 api_result = requests.get(api_call_front_str+str(theID)+'/').json()
                 theName = api_result['name']
@@ -210,7 +210,7 @@ class zKillAPI():
             if temp_ship_name != None:
                 mail['victim']['shipTypeName'] = temp_ship_name
             else: #better call ccp example: https://api.eveonline.com/eve/TypeName.xml.aspx?ids=603
-                time.sleep(0.75) # 'be polite' with requests
+                time.sleep(2) # 'be polite' with requests
                 api_call_front_str = 'https://api.eveonline.com/eve/TypeName.xml.aspx?ids='
                 api_result = requests.get(api_call_front_str+str(theID)).text
                 #since XML parser docs are basically novels to read and they
