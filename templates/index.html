@@ -45,15 +45,15 @@
           </td>
           <td style="center">
             <a href="https://zkillboard.com/kill/{{killmail['killID']}}/"><img src="https://imageserver.eveonline.com/Type/{{killmail['victim']['shipTypeID']}}_64.png"
-                 height="40" width="40" alt="WORK_IN_PROGRESS"></a>
+                 height="40" width="40" alt="({{killmail['victim']['shipTypeName']}})"></a>
           </td>
-          <td><span class="name"><a href="https://zkillboard.com/system/{{killmail['solarSystemID']}}/">{{killmail['solarSystemID']}}</a></span></td>
+          <td><span class="name"><a href="https://zkillboard.com/system/{{killmail['solarSystemID']}}/">{{killmail['solarSystemName']}}</a></span></td>
           <td>
             <a href="https://zkillboard.com/alliance/{{killmail['victim']['allianceID']}}/"><img src="https://image.eveonline.com/Alliance/{{killmail['victim']['allianceID']}}_64.png"
                  height="40" width="40" alt="{{killmail['victim']['allianceName']}}"></a>
             <span class="name">
               <a href="https://zkillboard.com/character/{{killmail['victim']['characterID']}}/">{{killmail['victim']['characterName']}}</a>
-              <span class="greytext">({{killmail['victim']['shipTypeID']}})</span>
+              <span class="greytext">({{killmail['victim']['shipTypeName']}})</span>
               <br><small><a href="https://zkillboard.com/alliance/{{killmail['victim']['allianceID']}}/">{{killmail['victim']['allianceName']}}</a></small>
             </span>
           </td>

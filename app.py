@@ -183,28 +183,54 @@ class zKillAPI():
         return sorted(kills.items(), key=lambda x: x[0], reverse=True)
 
     def tag_solarSystemName(self):
-        pass
+        for mail in self.history:
+            theID = mail['solarSystemID']
+            if mail.get('solarSystemName', None) != None:
+                continue
+            #if solarSystemID present in self.solarsystem_lookup don't call the api
+            temp_solarsystem_name = self.solarsystem_lookup.get(theID, None)
+            if temp_solarsystem_name != None:
+                mail['solarSystemName'] = temp_solarsystem_name
+            else: #better call ccp example: https://crest-tq.eveonline.com/solarsystems/30002022/
+                time.sleep(0.15) # 'be polite' with requests
+                api_call_front_str = 'https://crest-tq.eveonline.com/solarsystems/'
+                api_result = requests.get(api_call_front_str+str(theID)+'/').json()
+                theName = api_result['name']
+                mail['solarSystemName'] = theName
+                #and save this result so we don't call ccp again
+                self.solarsystem_lookup[theID] = theName
 
     def tag_shipTypeID(self):
         for mail in self.history:
+            theID = mail['victim']['shipTypeID']
             if mail['victim'].get('shipTypeName', None) != None:
                 continue
-            #if shipTypeID present in self.ship_lookup don't call the zkill api
-            temp_ship_name = self.ship_lookup.get(mail['victim']['shipTypeID'], None)
+            #if shipTypeID present in self.ship_lookup don't call the api
+            temp_ship_name = self.ship_lookup.get(theID, None)
             if temp_ship_name != None:
                 mail['victim']['shipTypeName'] = temp_ship_name
-            else: #better call ccp? TODO example: https://api.eveonline.com/eve/TypeName.xml.aspx?ids=603
-                time.sleep(5) # 'be polite' with requests
+            else: #better call ccp example: https://api.eveonline.com/eve/TypeName.xml.aspx?ids=603
+                time.sleep(0.75) # 'be polite' with requests
                 api_call_front_str = 'https://api.eveonline.com/eve/TypeName.xml.aspx?ids='
-                api_result = requests.get(api_call_front_str+str(mail['victim']['shipTypeID'])).json()
-                mail['victim']['shipTypeName'] = api_result.
+                api_result = requests.get(api_call_front_str+str(theID)).text
+                #since XML parser docs are basically novels to read and they
+                #have SECURITY VULNERABILITIES I'm going to not use them, dwi
+                #find start of typeName="
+                name_start = api_result.find('typeName="') + len('typeName="')
+                #find end of the name " />   this means we will correctly fetch names even with double quotes
+                name_end_offset = api_result[name_start:].find('" />')
+                name_end = name_start + name_end_offset
+                theName = api_result[name_start:name_end]
+                mail['victim']['shipTypeName'] = theName
+                #and save this result so we don't call ccp again
+                self.ship_lookup[theID] = theName
 
     def use_character(self, charid):
         cs = {v:k for k,v in self.character_list.items()}
         charname = cs[charid]
         self.history = [x for x in self.history if charname in x['our_characters'] or charname == x['victim']['characterName']]
 
-    def write_to_file(self):
+    def write_data_to_file(self):
         with open('out/data/history.json', 'w') as outfile:
             json.dump(self.history, outfile)
         with open('out/data/ship_lookup.json', 'w') as outfile:
