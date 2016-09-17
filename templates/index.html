@@ -47,8 +47,8 @@
             <a href="https://zkillboard.com/kill/{{killmail['killID']}}/"><img src="https://imageserver.eveonline.com/Type/{{killmail['victim']['shipTypeID']}}_64.png"
                  height="40" width="40" alt="({{killmail['victim']['shipTypeName']}})"></a>
           </td>
-          <td><span class="name"><a href="https://zkillboard.com/system/{{killmail['solarSystemID']}}/">{{killmail['solarSystemName']}}</a></span></td>
-          <td>
+          <td class="solar-system"><span class="name"><a href="https://zkillboard.com/system/{{killmail['solarSystemID']}}/">{{killmail['solarSystemName']}}</a></span></td>
+          <td class="pilot-info">
             <a href="https://zkillboard.com/alliance/{{killmail['victim']['allianceID']}}/"><img src="https://image.eveonline.com/Alliance/{{killmail['victim']['allianceID']}}_64.png"
                  height="40" width="40" alt="{{killmail['victim']['allianceName']}}"></a>
             <span class="name">
@@ -57,7 +57,7 @@
               <br><small><a href="https://zkillboard.com/alliance/{{killmail['victim']['allianceID']}}/">{{killmail['victim']['allianceName']}}</a></small>
             </span>
           </td>
-          <td>
+          <td class="final-blow-info">
             <a href="https://zkillboard.com/alliance/{{killmail['final_blow']['allianceID']}}/"><img src="https://imageserver.eveonline.com/Alliance/{{killmail['final_blow']['allianceID']}}_64.png"
                  height="40" width="40" alt="{{killmail['final_blow']['allianceName']}}"></a>
             <span class="name">
@@ -65,7 +65,7 @@
               <small><a href="https://zkillboard.com/alliance/{{killmail['final_blow']['allianceID']}}/">{{killmail['final_blow']['allianceName']}}</a></small>
             </span>
           </td>
-          <td><small>{{killmail['our_involved_html']|safe}}</small></td>
+          <td class="involved-info"><small>{{killmail['our_involved_html']|safe}}</small></td>
         </tr>
         {% endfor %}
         {% endfor %}
