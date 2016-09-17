@@ -31,10 +31,10 @@
           <th>Involved Characters</th>
         </tr>
 
-        {% for day, killmails in history %}
+        {% for day, daystr, killmails in history %}
         <tr class="kb-table-row-date">
-          <th colspan="8" class="row-month">
-              <time dateformat="{{day}}">{{day}}</time>
+          <th colspan="8" class="row-date">
+              {{daystr}}
           </th>
         </tr>
         {% for killmail in killmails %}
@@ -43,7 +43,7 @@
             {{killmail['killTime'][11:16]}}<br>
             <a href="https://zkillboard.com/kill/{{killmail['killID']}}/">{{killmail['formatted_price']}}</a>
           </td>
-          <td style="center">
+          <td class="ship-icon">
             <a href="https://zkillboard.com/kill/{{killmail['killID']}}/"><img src="https://imageserver.eveonline.com/Type/{{killmail['victim']['shipTypeID']}}_64.png"
                  height="40" width="40" alt="({{killmail['victim']['shipTypeName']}})"></a>
           </td>

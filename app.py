@@ -176,11 +176,24 @@ class zKillAPI():
                 return k['zkb']['totalValue']
         return 0
 
+    def format_date(self, dateval):
+        year = str(int(dateval[0:4]))
+        month = int(dateval[5:7])
+        day = str(int(dateval[8:11]))
+        monthname = ['','January', 'February', 'March', 'April', 'May', \
+            'June', 'July', 'August', 'September', 'October', 'November', \
+            'December']
+        return monthname[month] + ' ' + day + ', ' + year
+
     def kills_by_date(self):
         kills = defaultdict(list)
         for kill in reversed(self.history):
             kills[kill['killTime'].split(' ')[0]].append(kill)
-        return sorted(kills.items(), key=lambda x: x[0], reverse=True)
+        kills_by_day = sorted(kills.items(), key=lambda x: x[0], reverse=True)
+        result = []
+        for day, killmails in kills_by_day:
+            result.append((day, self.format_date(day), killmails))
+        return result
 
     def tag_solarSystemName(self):
         for mail in self.history:
