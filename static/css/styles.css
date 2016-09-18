@@ -1,9 +1,3 @@
-table a:not(.btn), .table a:not(.btn) {
-	color: #2a9fd6;
-	text-decoration: none;
-	background: transparent;
-}
-
 .greytext {
 	color: #ccc;
 }
@@ -22,6 +16,10 @@ table a:not(.btn), .table a:not(.btn) {
 	color: #2a9fd6;
 }
 
+.table-kbstats {
+	table-layout: fixed;
+}
+
 .table-kbstats .time-price {
 	width: 8%;
 }
@@ -31,10 +29,7 @@ table a:not(.btn), .table a:not(.btn) {
 }
 
 .table-kbstats .ship-icon img {
-	text-align: center;
-	display: inline;
-	margin-right: 0.2em;
-	margin-left: 0.2em;
+	margin: 0 auto;
 	float: none;
 }
 
@@ -53,7 +48,7 @@ table a:not(.btn), .table a:not(.btn) {
 }
 
 .table-kbstats .involved-info {
-	width: 18%;
+	width: 27%;
 }
 
 .table-kbstats .row-date {
@@ -108,8 +103,9 @@ table a:not(.btn), .table a:not(.btn) {
 	background-color: #0a8bbd;
 }
 
-.table-kbstats tr.kb-table-header th {
+.table-kbstats .kb-table-header th {
 	text-align: left;
+	padding: 8px 8px;
 }
 
 .table-kbstats img {
@@ -122,15 +118,25 @@ table a:not(.btn), .table a:not(.btn) {
 	text-align: center;
 }
 
-.table-kbstats span.name {
+.table-kbstats .name {
 	display: block;
 }
 
 @media (max-width: 667px) {
+	.table-kbstats {
+		table-layout: auto;
+	}
+
 	.table-kbstats img {
 		width: 20px;
 		height: 20px;
 	}
+}
+
+table a:not(.btn), .table a:not(.btn) {
+	color: #2a9fd6;
+	text-decoration: none;
+	background: transparent;
 }
 
 #footer {
