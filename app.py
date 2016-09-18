@@ -66,7 +66,7 @@ class zKillAPI():
         api_call_backstr = "/afterKillID/"+str(self.most_recent_killID)+"/orderDirection/asc/no-items/page/"
         api_call_minus_page_num = api_call_frontstr + api_call_charID_list + api_call_backstr
         current_page = 1
-        logging.info('api call: ' +api_call_minus_page_num+str(current_page)+'/')
+        print 'api call: '+api_call_minus_page_num+str(current_page)+'/'
         raw_api_data = requests.get(api_call_minus_page_num+str(current_page)+'/').json()
         raw_api_pages = raw_api_data
         while len(raw_api_data) != 0: #ensure there are no further pages
@@ -205,8 +205,9 @@ class zKillAPI():
             if temp_solarsystem_name != None:
                 mail['solarSystemName'] = temp_solarsystem_name
             else: #better call ccp example: https://crest-tq.eveonline.com/solarsystems/30002022/
-                time.sleep(1) # 'be polite' with requests
                 api_call_front_str = 'https://crest-tq.eveonline.com/solarsystems/'
+                print 'calling ccp: '+api_call_front_str+str(theID)+'/'
+                time.sleep(1) # 'be polite' with requests
                 api_result = requests.get(api_call_front_str+str(theID)+'/').json()
                 theName = api_result['name']
                 mail['solarSystemName'] = theName
@@ -223,8 +224,9 @@ class zKillAPI():
             if temp_ship_name != None:
                 mail['victim']['shipTypeName'] = temp_ship_name
             else: #better call ccp example: https://api.eveonline.com/eve/TypeName.xml.aspx?ids=603
-                time.sleep(2) # 'be polite' with requests
                 api_call_front_str = 'https://api.eveonline.com/eve/TypeName.xml.aspx?ids='
+                print 'calling ccp: '+ api_call_front_str+str(theID)
+                time.sleep(2) # 'be polite' with requests
                 api_result = requests.get(api_call_front_str+str(theID)).text
                 #since XML parser docs are basically novels to read and they
                 #have SECURITY VULNERABILITIES I'm going to not use them, dwi
@@ -244,6 +246,7 @@ class zKillAPI():
         self.history = [x for x in self.history if charname in x['our_characters'] or charname == x['victim']['characterName']]
 
     def write_data_to_file(self):
+        print 'writing data'
         with open('out/data/history.json', 'w') as outfile:
             json.dump(self.history, outfile)
         with open('out/data/ship_lookup.json', 'w') as outfile:
@@ -251,7 +254,7 @@ class zKillAPI():
         with open('out/data/solarsystem_lookup.json', 'w') as outfile:
             json.dump(self.solarsystem_lookup, outfile)
 
-    def build(self):
+    def update_all(self):
         self.update_kill_history()
         self.prune_unused_history_fields()
         self.tag_as_kill_loss_or_friendly_fire()
@@ -276,18 +279,21 @@ class zKillAPI():
 @app.route('/', defaults={'charid': None})
 @app.route('/<int:charid>/')
 def index(charid):
+    print 'character: '+str(charid)
     zKill = zKillAPI()
-    zKill.build()
     if charid:
         zKill.use_character(charid)
     return render_template('index.html', **zKill.data)
 
 @freezer.register_generator
 def index():
+    print 'main build'
     zKill = zKillAPI()
+    zKill.update_all()
+    print 'update success'
+    yield {'charid': None}
     for x in zKill.character_list.values():
         yield {'charid': x}
-    yield {'charid': None}
 
 
 if __name__ == "__main__":
@@ -301,7 +307,7 @@ if __name__ == "__main__":
         zKill = zKillAPI()
         while zKill.update_kill_history() != 1:
             time.sleep(10)
-        zKill.build()
+        zKill.update_all()
     else:
         app.run(debug=True, host='0.0.0.0')
 
