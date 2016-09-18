@@ -2,89 +2,125 @@
 //original selectors
 //table a:not(.btn), .table a:not(.btn)
 %extend_1 {
-	color: #2a9fd6;
-	text-decoration: none;
-	background: transparent;
+  color: #2a9fd6;
+  text-decoration: none;
+  background: transparent;
 }
 
 
 .greytext {
-	color: #ccc;
+  color: #ccc;
 }
 .jumbotron {
-	background-size: cover;
-	img {
-		margin-left: auto;
-		margin-right: auto;
-	}
-	.page-title {
-		text-shadow: 1px 1px #333;
-		color: #2a9fd6;
-	}
+  background-size: cover;
+  img {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .page-title {
+    text-shadow: 1px 1px #333;
+    color: #2a9fd6;
+  }
 }
 .table-kbstats {
-	.row-date {
-		background-color: #111;
-		font-weight: normal;
+  .time-price {
+    width: 8%;
+  }
+  .ship-icon {
+    width: 8%;
+    img {
+      text-align: center;
+	  display: inline;
+	  margin-right: 0.2em;
+      margin-left: 0.2em;
+      float: none;
+    }
+  }
+  .solar-system {
+    text-align: center;
+    width: 10%;
+    th {
+      text-align: left;
+    }
+  }
+  .pilot-info {
+    width: 28%;
+  }
+  .final-blow-info {
+    width: 28%;
+  }
+  .involved-info {
+    width: 18%;
+  }
+  .row-date {
+    background-color: #111;
+    font-weight: normal;
         &:hover {
-			transition: 0.2s ease-in all;
-			background-color: #282828;
-		}
-	}
-	.row-kill {
-		transition: 0.2s ease-in all;
-		background-color: #194119;
-		&:nth-child(2n) {
-			background-color: #002c00;
-		}
-		&:hover {
-			transition: 0.2s ease-in all;
-			background-color: #004e7a;
-		}
-	}
-	.row-loss {
-		transition: 0.2s ease-in all;
-		background-color: #761919;
-		&:nth-child(2n) {
-			background-color: #670000;
-		}
-		&:hover {
-			transition: 0.2s ease-in all;
-			background-color: #dd9300;
-		}
-	}
-	.row-friendlyfire {
-		transition: 0.2s ease-in all;
-		background-color: #aa099a;
-		&:nth-child(2n) {
-			background-color: #840778;
-		}
-		&:hover {
-			transition: 0.2s ease-in all;
-			background-color: #0a8bbd;
-		}
-	}
-	img {
-		float: left;
-		display: block;
-		margin-right: 0.5em;
-	}
-	td:last-child {
-		text-align: center;
-	}
-	span.name {
-		display: block;
-	}
+      transition: 0.2s ease-in all;
+      background-color: #282828;
+    }
+  }
+  .row-kill {
+    transition: 0.2s ease-in all;
+    background-color: #194119;
+    &:nth-child(2n) {
+      background-color: #002c00;
+    }
+    &:hover {
+      transition: 0.2s ease-in all;
+      background-color: #004e7a;
+    }
+  }
+  .row-loss {
+    transition: 0.2s ease-in all;
+    background-color: #761919;
+    &:nth-child(2n) {
+      background-color: #670000;
+    }
+    &:hover {
+      transition: 0.2s ease-in all;
+      background-color: #dd9300;
+    }
+  }
+  .row-friendlyfire {
+    transition: 0.2s ease-in all;
+    background-color: #aa099a;
+    &:nth-child(2n) {
+      background-color: #840778;
+    }
+    &:hover {
+      transition: 0.2s ease-in all;
+      background-color: #0a8bbd;
+    }
+  }
+  img {
+    float: left;
+    display: block;
+    margin-right: 0.5em;
+  }
+  td:last-child {
+    text-align: center;
+  }
+  span.name {
+    display: block;
+  }
 }
 @media(max-width: 667px) {
-	.table-kbstats img {
-		width: 20px;
-		height: 20px;
-	}
+  .table-kbstats img {
+    width: 20px;
+    height: 20px;
+  }
 }
 table a:not(.btn) {
-	@extend %extend_1;
+  @extend %extend_1;
 }
 .table a:not(.btn) {
-	@extend %extend_1;
+  @extend %extend_1;
+}
+#footer {
+    background-color: #151515;
+    color: #ccc;
+    padding: 10px;
+    margin-top: 20px;
+    font-size: 70%;
 }

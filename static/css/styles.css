@@ -22,6 +22,43 @@ table a:not(.btn), .table a:not(.btn) {
 	color: #2a9fd6;
 }
 
+.table-kbstats .time-price {
+	width: 8%;
+}
+
+.table-kbstats .ship-icon {
+	width: 8%;
+}
+
+.table-kbstats .ship-icon img {
+	text-align: center;
+	display: inline;
+	margin-right: 0.2em;
+	margin-left: 0.2em;
+	float: none;
+}
+
+.table-kbstats .solar-system {
+	text-align: center;
+	width: 10%;
+}
+
+.table-kbstats .solar-system th {
+	text-align: left;
+}
+
+.table-kbstats .pilot-info {
+	width: 28%;
+}
+
+.table-kbstats .final-blow-info {
+	width: 28%;
+}
+
+.table-kbstats .involved-info {
+	width: 18%;
+}
+
 .table-kbstats .row-date {
 	background-color: #111;
 	font-weight: normal;
@@ -93,4 +130,12 @@ table a:not(.btn), .table a:not(.btn) {
 		width: 20px;
 		height: 20px;
 	}
+}
+
+#footer {
+	background-color: #151515;
+	color: #ccc;
+	padding: 10px;
+	margin-top: 20px;
+	font-size: 70%;
 }
