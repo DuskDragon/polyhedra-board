@@ -20,6 +20,7 @@ class zKillAPI():
         self.character_list = {}
         self.history = {}
         self.most_recent_killID = 0
+        self.characterName = 'Polyhedra'
 
         with open('data/characters.json', 'r') as fd:
             self.character_list = json.load(fd)
@@ -244,6 +245,7 @@ class zKillAPI():
         cs = {v:k for k,v in self.character_list.items()}
         charname = cs[charid]
         self.history = [x for x in self.history if charname in x['our_characters'] or charname == x['victim']['characterName']]
+        self.characterName = charname
 
     def write_data_to_file(self):
         print 'writing data'
@@ -273,7 +275,8 @@ class zKillAPI():
                   'money_lost':      self.kill_sums('row-loss'),
                   'money_killed':    self.kill_sums('row-kill'),
                   'friendlyfire':    self.kill_counts('row-friendlyfire'),
-                  'character_count': len(self.character_list)}
+                  'character_count': len(self.character_list),
+                  'characterName':   self.characterName}
         return result
 
 @app.route('/', defaults={'charid': None})
