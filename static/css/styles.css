@@ -41,18 +41,15 @@ table a:not(.btn), .table a:not(.btn) {
 .table-kbstats .solar-system {
 	text-align: center;
 	width: 10%;
-}
-
-.table-kbstats .solar-system th {
-	text-align: left;
+	padding: 8px 0;
 }
 
 .table-kbstats .pilot-info {
-	width: 28%;
+	width: 40%;
 }
 
 .table-kbstats .final-blow-info {
-	width: 28%;
+	width: 40%;
 }
 
 .table-kbstats .involved-info {
@@ -109,6 +106,10 @@ table a:not(.btn), .table a:not(.btn) {
 .table-kbstats .row-friendlyfire:hover {
 	transition: 0.2s ease-in all;
 	background-color: #0a8bbd;
+}
+
+.table-kbstats tr.kb-table-header th {
+	text-align: left;
 }
 
 .table-kbstats img {
