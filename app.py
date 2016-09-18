@@ -67,13 +67,13 @@ class zKillAPI():
         api_call_backstr = "/afterKillID/"+str(self.most_recent_killID)+"/orderDirection/asc/no-items/page/"
         api_call_minus_page_num = api_call_frontstr + api_call_charID_list + api_call_backstr
         current_page = 1
-        print 'api call: '+api_call_minus_page_num+str(current_page)+'/'
+        print 'calling zkill: '+api_call_minus_page_num+str(current_page)+'/'
         raw_api_data = requests.get(api_call_minus_page_num+str(current_page)+'/').json()
         raw_api_pages = raw_api_data
         while len(raw_api_data) != 0: #ensure there are no further pages
             time.sleep(10) # zkill api can be slow and tends to error out
             current_page += 1
-            logging.info('api call: ' +api_call_minus_page_num+str(current_page)+'/')
+            print 'calling zkill: ' +api_call_minus_page_num+str(current_page)+'/'
             raw_api_data = requests.get(api_call_minus_page_num+str(current_page)+'/').json()
             raw_api_pages.extend(raw_api_data)
         #no more pages on the api with data
