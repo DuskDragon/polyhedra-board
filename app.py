@@ -62,7 +62,9 @@ class zKillAPI():
 
 
     def update_kill_history(self):
-        api_call_charID_list = ','.join(str(x) for x in self.character_list.values())
+        charID_sorted = character_list.values()
+        charID_sorted.sort()
+        api_call_charID_list = ','.join(str(x) for x in charID_sorted)
         api_call_frontstr = "http://zkillboard.com/api/character/"
         api_call_backstr = "/afterKillID/"+str(self.most_recent_killID)+"/orderDirection/asc/no-items/page/"
         api_call_minus_page_num = api_call_frontstr + api_call_charID_list + api_call_backstr
