@@ -6,6 +6,9 @@ import time
 from datetime import datetime
 from collections import defaultdict
 
+from cachecontrol import CacheControl
+from cachecontrol.caches.file_cache import FileCache
+
 from flask import Flask, render_template
 from flask_frozen import Freezer
 
@@ -17,6 +20,7 @@ app.config['FREEZER_RELATIVE_URLS'] = True
 
 class zKillAPI():
     def __init__(self):
+        self.cached_sess = CacheControl(requests.Session(), cache=FileCache('.web_cache'))
         self.character_list = {}
         self.history = {}
         self.most_recent_killID = 0
@@ -24,30 +28,22 @@ class zKillAPI():
 
         with open('data/characters.json', 'r') as fd:
             self.character_list = json.load(fd)
-        if len(self.character_list) > 10:
-            raise ValueError("More than 10 values in characters.json, zkill API only allows 10")
-            # maybe later we will go full api insanity and pull two different 10 character calls
 
         #load current history
         try:
             with open('out/data/history.json', 'r') as fd:
                 self.history = json.load(fd)
-        except IOError:
-            with open('out/data/history.json', 'a') as faild:
-                json.dump([], faild)
-            self.history = []
-        if len(self.history) == 0:
-            self.most_recent_killID = (14123136-1) #first killmail minus 1 to fetch all UPDATE THIS IN FUTURE KILLBOARDS
-        else:
-            self.most_recent_killID = self.history[-1]["killID"]
-        logging.info('zKillAPI.most_recent_killID=' + str(self.most_recent_killID))
+        except FileNotFoundError:
+            with open('out/data/history.json', 'a+') as faild:
+                self.history = []
+                json.dump(self.history, faild)
 
         #load ship_lookup (ID dictionary) json
         try:
             with open('out/data/ship_lookup.json', 'r') as fd:
                 self.ship_lookup = json.load(fd)
-        except IOError:
-            with open('out/data/ship_lookup.json', 'a') as faild:
+        except FileNotFoundError:
+            with open('out/data/ship_lookup.json', 'a+') as faild:
                 json.dump({}, faild)
             self.ship_lookup = {}
 
@@ -55,42 +51,65 @@ class zKillAPI():
         try:
             with open('out/data/solarsystem_lookup.json', 'r') as fd:
                 self.solarsystem_lookup = json.load(fd)
-        except IOError:
-            with open('out/data/solarsystem_lookup.json', 'a') as faild:
+        except FileNotFoundError:
+            with open('out/data/solarsystem_lookup.json', 'a+') as faild:
                 json.dump({}, faild)
             self.solarsystem_lookup = {}
 
-
     def update_kill_history(self):
-        charID_sorted = self.character_list.values()
-        charID_sorted.sort()
-        api_call_charID_list = ','.join(str(x) for x in charID_sorted)
-        api_call_frontstr = "http://zkillboard.com/api/character/"
-        api_call_backstr = "/afterKillID/"+str(self.most_recent_killID)+"/orderDirection/asc/no-items/page/"
-        api_call_minus_page_num = api_call_frontstr + api_call_charID_list + api_call_backstr
-        current_page = 1
-        print 'calling zkill: '+api_call_minus_page_num+str(current_page)+'/'
-        raw_api_data = requests.get(api_call_minus_page_num+str(current_page)+'/').json()
-        raw_api_pages = raw_api_data
-        while len(raw_api_data) != 0: #ensure there are no further pages
-            time.sleep(10) # zkill api can be slow and tends to error out
-            current_page += 1
-            print 'calling zkill: ' +api_call_minus_page_num+str(current_page)+'/'
-            raw_api_data = requests.get(api_call_minus_page_num+str(current_page)+'/').json()
-            raw_api_pages.extend(raw_api_data)
+        api_call_frontstr = "http://zkillboard.com/api/characterID/"
+        api_call_backstr = "/no-items/page/"
+        raw_api_by_char = {}
+        for name in self.character_list:
+            api_call_minus_page_num = api_call_frontstr + str(self.character_list[name]) + api_call_backstr
+            current_page = 1
+            print('calling zkill: '+api_call_minus_page_num+str(current_page)+'/')
+            raw_api_data = self.cached_sess.get(api_call_minus_page_num+str(current_page)+'/').json()
+            time.sleep(3) # zkill api can be slow and tends to error out
+            raw_api_by_char[name] = raw_api_data
+            while len(raw_api_data) != 0: #ensure there are no further pages
+                current_page += 1
+                print('calling zkill: ' +api_call_minus_page_num+str(current_page)+'/')
+                raw_api_data = self.cached_sess.get(api_call_minus_page_num+str(current_page)+'/').json()
+                time.sleep(3) # zkill api can be slow and tends to error out
+                raw_api_by_char[name] += raw_api_data
         #no more pages on the api with data
-        self.history.extend(raw_api_pages)
-        #for a new round of api calls, final item contains the newest killID if it exists
-        self.most_recent_killID = self.history[-1]["killID"]
-        logging.info('zKillAPI.most_recent_killID updated to: ' + str(self.most_recent_killID))
-        return current_page
+        for name in self.character_list: #for each character
+            for kill in raw_api_by_char[name]: #for each kill
+                if kill == []: #if we are at the end of the list ignore the last empty item
+                    continue
+                save_check = True
+                for hist_kill in self.history: #if it exists already, don't append
+                    if hist_kill['killmail_id'] == kill['killmail_id']:
+                        save_check = False
+                        break
+                if save_check: #if it doesn't exist then append it
+                    self.history.append(kill)
+                    
+    def update_kill_details(self):
+        api_call_frontstr = "https://esi.evetech.net/latest/killmails/"
+        api_call_backstr = "/?datasource=tranquility"
+        for kill in self.history:
+            if kill.get('attackers') != None:
+                continue
+            api_call_id = str(kill['killmail_id'])
+            api_call_hash = str(kill['zkb']['hash'])
+            api_call = api_call_frontstr + api_call_id + '/' + api_call_hash + api_call_backstr
+            raw_api_data = self.cached_sess.get(api_call).json()
+            time.sleep(1) # 'be polite' with requests (cached_sess)
+            # grab all key
+            #for key in raw_api_data.keys():
+            #    kill[key] = raw_api_data[key]
 
     def prune_unused_history_fields(self):
         for mail in self.history:
             mail.pop('moonID', None) #prune moon info
             mail.pop('position', None) #we don't need y,x,z in-space coords
-            mail['zkb'].pop('hash', None) #prune zkill hash value
+            #mail['zkb'].pop('hash', None) #prune zkill hash value
             mail['zkb'].pop('points', None) #prune points metric because it means literally nothing
+            mail['zkb'].pop('awox', None) #prune
+            mail['victim'].pop('items', None) #prune
+            mail['victim'].pop('position', None) #prune
             if mail.get('involved', None) == None:
                 mail['involved'] = len(mail['attackers']) # save number involved because we are pruning attackers
             pruned_attackers = []
@@ -207,14 +226,14 @@ class zKillAPI():
             temp_solarsystem_name = self.solarsystem_lookup.get(theID, None)
             if temp_solarsystem_name != None:
                 mail['solarSystemName'] = temp_solarsystem_name
-            else: #better call ccp example: https://crest-tq.eveonline.com/solarsystems/30002022/
+            else: #better call CCP example: https://esi.evetech.net/latest/universe/systems/30002022/?datasource=tranquility&language=en-us
                 api_call_front_str = 'https://crest-tq.eveonline.com/solarsystems/'
-                print 'calling ccp: '+api_call_front_str+str(theID)+'/'
-                time.sleep(1) # 'be polite' with requests
-                api_result = requests.get(api_call_front_str+str(theID)+'/').json()
+                print('calling CCP: '+api_call_front_str+str(theID)+'/')
+                api_result = self.cached_sess.get(api_call_front_str+str(theID)+'/').json()
+                time.sleep(1) # 'be polite' with requests (cached_sess)
                 theName = api_result['name']
                 mail['solarSystemName'] = theName
-                #and save this result so we don't call ccp again
+                #and save this result so we don't call CCP again
                 self.solarsystem_lookup[theID] = theName
 
     def tag_shipTypeID(self):
@@ -226,11 +245,11 @@ class zKillAPI():
             temp_ship_name = self.ship_lookup.get(theID, None)
             if temp_ship_name != None:
                 mail['victim']['shipTypeName'] = temp_ship_name
-            else: #better call ccp example: https://api.eveonline.com/eve/TypeName.xml.aspx?ids=603
+            else: #better call CCP example: https://esi.evetech.net/latest/universe/types/603/?datasource=tranquility&language=en-us
                 api_call_front_str = 'https://api.eveonline.com/eve/TypeName.xml.aspx?ids='
-                print 'calling ccp: '+ api_call_front_str+str(theID)
-                time.sleep(2) # 'be polite' with requests
-                api_result = requests.get(api_call_front_str+str(theID)).text
+                print('calling CCP: '+ api_call_front_str+str(theID))
+                api_result = self.cached_sess.get(api_call_front_str+str(theID)).text
+                time.sleep(2) # 'be polite' with requests (cached_sess)
                 #since XML parser docs are basically novels to read and they
                 #have SECURITY VULNERABILITIES I'm going to not use them, dwi
                 #find start of typeName="
@@ -240,7 +259,7 @@ class zKillAPI():
                 name_end = name_start + name_end_offset
                 theName = api_result[name_start:name_end]
                 mail['victim']['shipTypeName'] = theName
-                #and save this result so we don't call ccp again
+                #and save this result so we don't call CCP again
                 self.ship_lookup[theID] = theName
 
     def use_character(self, charid):
@@ -250,7 +269,7 @@ class zKillAPI():
         self.board_name = charname
 
     def write_data_to_file(self):
-        print 'writing data'
+        print('writing data')
         with open('out/data/history.json', 'w') as outfile:
             json.dump(self.history, outfile)
         with open('out/data/ship_lookup.json', 'w') as outfile:
@@ -260,6 +279,7 @@ class zKillAPI():
 
     def update_all(self):
         self.update_kill_history()
+        self.update_kill_details()
         self.prune_unused_history_fields()
         self.tag_as_kill_loss_or_friendly_fire()
         self.tag_involved_characters()
@@ -287,7 +307,7 @@ class zKillAPI():
 @app.route('/', defaults={'charid': None})
 @app.route('/<int:charid>/')
 def index(charid):
-    print 'character: '+str(charid)
+    print('character: '+str(charid))
     zKill = zKillAPI()
     if charid:
         zKill.use_character(charid)
@@ -295,10 +315,10 @@ def index(charid):
 
 @freezer.register_generator
 def index():
-    print 'main build'
+    print('main build')
     zKill = zKillAPI()
     zKill.update_all()
-    print 'update success'
+    print('update success')
     yield {'charid': None}
     for x in zKill.character_list.values():
         yield {'charid': x}
