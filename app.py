@@ -21,13 +21,18 @@ app.config['FREEZER_RELATIVE_URLS'] = True
 class zKillAPI():
     def __init__(self):
         self.cached_sess = CacheControl(requests.Session(), cache=FileCache('.web_cache'))
+        self.last_call_cache_hit = True
         self.character_list = {}
+        self.reverse_character_list = {}
         self.history = {}
         self.most_recent_killID = 0
         self.board_name = 'Polyhedra'
 
         with open('data/characters.json', 'r') as fd:
             self.character_list = json.load(fd)
+
+        for name in self.character_list:
+            self.reverse_character_list[str(self.character_list[name])] = name
 
         #load current history
         try:
@@ -56,6 +61,15 @@ class zKillAPI():
                 json.dump({}, faild)
             self.solarsystem_lookup = {}
 
+    def api_call_wrap(self, url):
+        if type(url) != str:
+            raise ValueError('zKill:api_call_wrap was passed a url that was not a string')
+        if self.last_call_cache_hit is False:
+            time.sleep(1) # 'be polite' with requests (cached_sess)
+        api_response = self.cached_sess.get(url)
+        self.last_call_cache_hit = api_response.from_cache
+        return api_response
+
     def update_kill_history(self):
         api_call_frontstr = "http://zkillboard.com/api/characterID/"
         api_call_backstr = "/no-items/page/"
@@ -64,13 +78,13 @@ class zKillAPI():
             api_call_minus_page_num = api_call_frontstr + str(self.character_list[name]) + api_call_backstr
             current_page = 1
             print('calling zkill: '+api_call_minus_page_num+str(current_page)+'/')
-            raw_api_data = self.cached_sess.get(api_call_minus_page_num+str(current_page)+'/').json()
+            raw_api_data = self.api_call_wrap(api_call_minus_page_num+str(current_page)+'/').json()
             time.sleep(3) # zkill api can be slow and tends to error out
             raw_api_by_char[name] = raw_api_data
             while len(raw_api_data) != 0: #ensure there are no further pages
                 current_page += 1
                 print('calling zkill: ' +api_call_minus_page_num+str(current_page)+'/')
-                raw_api_data = self.cached_sess.get(api_call_minus_page_num+str(current_page)+'/').json()
+                raw_api_data = self.api_call_wrap(api_call_minus_page_num+str(current_page)+'/').json()
                 time.sleep(3) # zkill api can be slow and tends to error out
                 raw_api_by_char[name] += raw_api_data
         #no more pages on the api with data
@@ -85,7 +99,7 @@ class zKillAPI():
                         break
                 if save_check: #if it doesn't exist then append it
                     self.history.append(kill)
-                    
+
     def update_kill_details(self):
         api_call_frontstr = "https://esi.evetech.net/latest/killmails/"
         api_call_backstr = "/?datasource=tranquility"
@@ -95,11 +109,11 @@ class zKillAPI():
             api_call_id = str(kill['killmail_id'])
             api_call_hash = str(kill['zkb']['hash'])
             api_call = api_call_frontstr + api_call_id + '/' + api_call_hash + api_call_backstr
-            raw_api_data = self.cached_sess.get(api_call).json()
-            time.sleep(1) # 'be polite' with requests (cached_sess)
+            print('calling ccp esi: '+api_call)
+            raw_api_data = self.api_call_wrap(api_call).json()
             # grab all key
-            #for key in raw_api_data.keys():
-            #    kill[key] = raw_api_data[key]
+            for key in raw_api_data.keys():
+                kill[key] = raw_api_data[key]
 
     def prune_unused_history_fields(self):
         for mail in self.history:
@@ -229,8 +243,7 @@ class zKillAPI():
             else: #better call CCP example: https://esi.evetech.net/latest/universe/systems/30002022/?datasource=tranquility&language=en-us
                 api_call_front_str = 'https://crest-tq.eveonline.com/solarsystems/'
                 print('calling CCP: '+api_call_front_str+str(theID)+'/')
-                api_result = self.cached_sess.get(api_call_front_str+str(theID)+'/').json()
-                time.sleep(1) # 'be polite' with requests (cached_sess)
+                api_result = self.api_call_wrap(api_call_front_str+str(theID)+'/').json()
                 theName = api_result['name']
                 mail['solarSystemName'] = theName
                 #and save this result so we don't call CCP again
@@ -248,8 +261,7 @@ class zKillAPI():
             else: #better call CCP example: https://esi.evetech.net/latest/universe/types/603/?datasource=tranquility&language=en-us
                 api_call_front_str = 'https://api.eveonline.com/eve/TypeName.xml.aspx?ids='
                 print('calling CCP: '+ api_call_front_str+str(theID))
-                api_result = self.cached_sess.get(api_call_front_str+str(theID)).text
-                time.sleep(2) # 'be polite' with requests (cached_sess)
+                api_result = self.api_call_wrap(api_call_front_str+str(theID)).text
                 #since XML parser docs are basically novels to read and they
                 #have SECURITY VULNERABILITIES I'm going to not use them, dwi
                 #find start of typeName="
