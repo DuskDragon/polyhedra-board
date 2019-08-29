@@ -61,6 +61,33 @@ class zKillAPI():
                 json.dump({}, faild)
             self.solarsystem_lookup = {}
 
+        #load character_lookup (ID dictionary) json
+        try:
+            with open('out/data/character_lookup.json', 'r') as fd:
+                self.character_lookup = json.load(fd)
+        except FileNotFoundError:
+            with open('out/data/character_lookup.json', 'a+') as faild:
+                json.dump({}, faild)
+            self.character_lookup = {}
+
+        #load corp_lookup (ID dictionary) json
+        try:
+            with open('out/data/corp_lookup.json', 'r') as fd:
+                self.corp_lookup = json.load(fd)
+        except FileNotFoundError:
+            with open('out/data/corp_lookup.json', 'a+') as faild:
+                json.dump({}, faild)
+            self.corp_lookup = {}
+
+        #load alliance_lookup (ID dictionary) json
+        try:
+            with open('out/data/alliance_lookup.json', 'r') as fd:
+                self.alliance_lookup = json.load(fd)
+        except FileNotFoundError:
+            with open('out/data/alliance_lookup.json', 'a+') as faild:
+                json.dump({}, faild)
+            self.alliance_lookup = {}
+
     def api_call_wrap(self, url):
         if type(url) != str:
             raise ValueError('zKill:api_call_wrap was passed a url that was not a string')
@@ -79,13 +106,11 @@ class zKillAPI():
             current_page = 1
             print('calling zkill: '+api_call_minus_page_num+str(current_page)+'/')
             raw_api_data = self.api_call_wrap(api_call_minus_page_num+str(current_page)+'/').json()
-            time.sleep(3) # zkill api can be slow and tends to error out
             raw_api_by_char[name] = raw_api_data
             while len(raw_api_data) != 0: #ensure there are no further pages
                 current_page += 1
                 print('calling zkill: ' +api_call_minus_page_num+str(current_page)+'/')
                 raw_api_data = self.api_call_wrap(api_call_minus_page_num+str(current_page)+'/').json()
-                time.sleep(3) # zkill api can be slow and tends to error out
                 raw_api_by_char[name] += raw_api_data
         #no more pages on the api with data
         for name in self.character_list: #for each character
@@ -102,10 +127,12 @@ class zKillAPI():
 
     def update_kill_details(self):
         api_call_frontstr = "https://esi.evetech.net/latest/killmails/"
-        api_call_backstr = "/?datasource=tranquility"
+        api_call_backstr = "/?datasource=tranquility&language=en-us"
         for kill in self.history:
             if kill.get('attackers') != None:
                 continue
+            if kill.get('ccp_esi', False):
+                continue #no need to call ccp for this killmail
             api_call_id = str(kill['killmail_id'])
             api_call_hash = str(kill['zkb']['hash'])
             api_call = api_call_frontstr + api_call_id + '/' + api_call_hash + api_call_backstr
@@ -114,6 +141,8 @@ class zKillAPI():
             # grab all key
             for key in raw_api_data.keys():
                 kill[key] = raw_api_data[key]
+            kill['ccp_esi'] = True
+        #set victim name
 
     def prune_unused_history_fields(self):
         for mail in self.history:
@@ -122,38 +151,21 @@ class zKillAPI():
             #mail['zkb'].pop('hash', None) #prune zkill hash value
             mail['zkb'].pop('points', None) #prune points metric because it means literally nothing
             mail['zkb'].pop('awox', None) #prune
+            mail['victim'].pop('damage_taken', None) #prune
             mail['victim'].pop('items', None) #prune
             mail['victim'].pop('position', None) #prune
             if mail.get('involved', None) == None:
                 mail['involved'] = len(mail['attackers']) # save number involved because we are pruning attackers
             pruned_attackers = []
-            for attacker in mail['attackers']: #keep only those on character_list or finalBlow == 1
-                if attacker['finalBlow'] == 1 or attacker['characterName'] in self.character_list.keys():
+            for attacker in mail['attackers']: #keep only those on character_list or final_blow == True
+                if attacker.get('final_blow', None) or attacker.get('character_id', None) in self.character_list.values():
                     attacker.pop('securityStatus', None) # drop sec status
+                    attacker.pop('damage_done', None) # drop raw damage (not ehp)
                     pruned_attackers.append(attacker)
                     #save final_blow to top level location also
-                    if attacker['finalBlow'] == 1:
+                    if attacker.get('final_blow', False):
                         mail['final_blow'] = attacker
             mail['attackers'] = pruned_attackers
-
-    def tag_as_kill_loss_or_friendly_fire(self):
-        for mail in self.history:
-            #if row_type tag exists, skip this mail
-            if mail.get('row_type', None) != None:
-                continue
-            #if one of our characters is the victim it is a loss
-            if mail.get('victim', None) != None:
-                if mail['victim'].get('characterName', None) in self.character_list.keys():
-                    #if one of our characters is on the killmail it's not just a loss
-                    #it's a friendly fire incident
-                    for attacker in mail['attackers']:
-                        if attacker['characterName'] in self.character_list.keys():
-                            mail['row_type'] = 'row-friendlyfire'
-                            break
-                    if mail.get('row_type', None) == None: # if it wasn't tagged friendly fire
-                        mail['row_type'] = 'row-loss'      # then it's just a loss
-                else: # if one of our characters isn't teh victim then it is a kill
-                    mail['row_type'] = 'row-kill'
 
     def tag_involved_characters(self):
         for mail in self.history:
@@ -163,10 +175,92 @@ class zKillAPI():
             #build an array of all of our characters involved
             involved = []
             for attacker in mail['attackers']:
-                if attacker['characterName'] in self.character_list.keys():
-                    involved.append(attacker['characterName'])
+                if attacker.get('character_id', None) in self.character_list.values():
+                    temp_name = self.reverse_character_list[str(attacker['character_id'])]
+                    involved.append(temp_name)
+                    attacker['character_name'] = temp_name
+                if attacker.get('character_id', None) != None and attacker.get('character_name', None) == None:
+                    attacker['character_name'] = self.lookup_character_name(attacker['character_id'])
             mail['our_characters'] = involved
             mail['our_involved_html'] = ('<BR>'.join(x for x in involved))
+            # tag alliance name, corp name, character_name
+            if mail['victim'].get('alliance_id', None) != None:
+                mail['victim']['alliance_name'] = self.lookup_alliance_name(mail['victim']['alliance_id'])
+            if mail['victim'].get('corporation_id', None) != None:
+                mail['victim']['corporation_name'] = self.lookup_corp_name(mail['victim']['corporation_id'])
+            if mail['victim'].get('character_id', None) != None:
+                mail['victim']['character_name'] = self.lookup_character_name(mail['victim']['character_id'])
+            if mail['final_blow'].get('character_id', None) != None:
+                mail['final_blow']['character_name'] = self.lookup_character_name(mail['final_blow']['character_id'])
+            if mail['final_blow'].get('alliance_id', None) != None:
+                mail['final_blow']['alliance_name'] = self.lookup_alliance_name(mail['final_blow']['alliance_id'])
+            if mail['zkb'].get('npc', False): # NPC do not have character names
+                if mail['final_blow'].get('character_id', None) == None:
+                    mail['final_blow']['character_name'] = self.lookup_shipTypeID(mail['final_blow']['ship_type_id'])
+
+    def tag_as_kill_loss_or_friendly_fire(self):
+        for mail in self.history:
+            #if row_type tag exists, skip this mail
+            if mail.get('row_type', None) != None:
+                continue
+            #if one of our characters is the victim it is a loss
+            if mail.get('victim', None) != None:
+                if mail['victim'].get('character_id', None) in self.character_list.values():
+                    #if one of our characters is on the killmail it's not just a loss
+                    #it's a friendly fire incident
+                    for attacker in mail['attackers']:
+                        if attacker.get('character_id', None) in self.character_list.values():
+                            mail['row_type'] = 'row-friendly_fire'
+                            break
+                    if mail.get('row_type', None) == None: # if it wasn't tagged friendly fire
+                        mail['row_type'] = 'row-loss'      # then it's just a loss
+                else: # if one of our characters isn't the victim then it is a kill
+                    mail['row_type'] = 'row-kill'
+
+    def lookup_alliance_name(self, theID):
+        #if id present in self.alliance_lookup don't call the api
+        temp_alliance_name = self.alliance_lookup.get(str(theID), None)
+        if temp_alliance_name != None:
+            return temp_alliance_name
+        else: #better call ccp example: https://esi.evetech.net/latest/alliances/300578921/?datasource=tranquility&language=en-us
+            api_call_front_str = 'https://esi.evetech.net/latest/alliances/'
+            api_call = api_call_front_str + str(theID) + '/?datasource=tranquility&language=en-us'
+            print('calling CCP: '+str(api_call))
+            api_result = self.api_call_wrap(str(api_call)).json()
+            theName = api_result['name']
+            #and save result
+            self.alliance_lookup[str(theID)] = theName
+            return theName
+
+    def lookup_corp_name(self, theID):
+        #if id present in self.corp_lookup don't call the api
+        temp_corp_name = self.corp_lookup.get(str(theID), None)
+        if temp_corp_name != None:
+            return temp_corp_name
+        else: #better call ccp example: https://esi.evetech.net/latest/corporations/300578921/?datasource=tranquility&language=en-us
+            api_call_front_str = 'https://esi.evetech.net/latest/corporations/'
+            api_call = api_call_front_str + str(theID) + '/?datasource=tranquility&language=en-us'
+            print('calling CCP: '+str(api_call))
+            api_result = self.api_call_wrap(str(api_call)).json()
+            theName = api_result['name']
+            #and save result
+            self.corp_lookup[str(theID)] = theName
+            return theName
+
+    def lookup_character_name(self, theID):
+        #if id present in self.character_lookup don't call the api
+        temp_character_name = self.character_lookup.get(str(theID), None)
+        if temp_character_name != None:
+            return temp_character_name
+        else: #better call ccp example: https://esi.evetech.net/latest/characters/300578921/?datasource=tranquility&language=en-us
+            api_call_front_str = 'https://esi.evetech.net/latest/characters/'
+            api_call = api_call_front_str + str(theID) + '/?datasource=tranquility&language=en-us'
+            print('calling CCP: '+str(api_call))
+            api_result = self.api_call_wrap(str(api_call)).json()
+            theName = api_result['name']
+            #and save result
+            self.character_lookup[str(theID)] = theName
+            return theName
 
     def kill_counts(self, killtype):
         return len([x for x in self.history if x['row_type'] == killtype])
@@ -207,7 +301,7 @@ class zKillAPI():
         return self.engineering_number_string(r)
 
     def verify_kill(self, k, killtype):
-        if k['row_type'] in [killtype, 'row-friendlyfire']:
+        if k['row_type'] in [killtype, 'row-friendly_fire']:
             if 'zkb' in k and 'totalValue' in k['zkb']:
                 return k['zkb']['totalValue']
         return 0
@@ -215,7 +309,7 @@ class zKillAPI():
     def format_date(self, dateval):
         year = str(int(dateval[0:4]))
         month = int(dateval[5:7])
-        day = str(int(dateval[8:11]))
+        day = str(int(dateval[8:10]))
         monthname = ['','January', 'February', 'March', 'April', 'May', \
             'June', 'July', 'August', 'September', 'October', 'November', \
             'December']
@@ -224,7 +318,7 @@ class zKillAPI():
     def kills_by_date(self):
         kills = defaultdict(list)
         for kill in reversed(self.history):
-            kills[kill['killTime'].split(' ')[0]].append(kill)
+            kills[kill['killmail_time'][0:10]].append(kill)
         kills_by_day = sorted(kills.items(), key=lambda x: x[0], reverse=True)
         result = []
         for day, killmails in kills_by_day:
@@ -233,51 +327,48 @@ class zKillAPI():
 
     def tag_solarSystemName(self):
         for mail in self.history:
-            theID = mail['solarSystemID']
-            if mail.get('solarSystemName', None) != None:
+            theID = mail['solar_system_id']
+            if mail.get('solar_system_name', None) != None:
                 continue
             #if solarSystemID present in self.solarsystem_lookup don't call the api
-            temp_solarsystem_name = self.solarsystem_lookup.get(theID, None)
+            temp_solarsystem_name = self.solarsystem_lookup.get(str(theID), None)
             if temp_solarsystem_name != None:
-                mail['solarSystemName'] = temp_solarsystem_name
+                mail['solar_system_name'] = temp_solarsystem_name
             else: #better call CCP example: https://esi.evetech.net/latest/universe/systems/30002022/?datasource=tranquility&language=en-us
-                api_call_front_str = 'https://crest-tq.eveonline.com/solarsystems/'
-                print('calling CCP: '+api_call_front_str+str(theID)+'/')
-                api_result = self.api_call_wrap(api_call_front_str+str(theID)+'/').json()
+                api_call_front_str = 'https://esi.evetech.net/latest/universe/systems/'
+                api_call = api_call_front_str+str(theID)+'/?datasource=tranquility&language=en-us'
+                print('calling CCP: '+str(api_call))
+                api_result = self.api_call_wrap(str(api_call)).json()
                 theName = api_result['name']
-                mail['solarSystemName'] = theName
+                mail['solar_system_name'] = theName
                 #and save this result so we don't call CCP again
-                self.solarsystem_lookup[theID] = theName
+                self.solarsystem_lookup[str(theID)] = theName
 
     def tag_shipTypeID(self):
         for mail in self.history:
-            theID = mail['victim']['shipTypeID']
-            if mail['victim'].get('shipTypeName', None) != None:
+            theID = mail['victim']['ship_type_id']
+            if mail['victim'].get('ship_type_name', None) != None:
                 continue
-            #if shipTypeID present in self.ship_lookup don't call the api
-            temp_ship_name = self.ship_lookup.get(theID, None)
-            if temp_ship_name != None:
-                mail['victim']['shipTypeName'] = temp_ship_name
-            else: #better call CCP example: https://esi.evetech.net/latest/universe/types/603/?datasource=tranquility&language=en-us
-                api_call_front_str = 'https://api.eveonline.com/eve/TypeName.xml.aspx?ids='
-                print('calling CCP: '+ api_call_front_str+str(theID))
-                api_result = self.api_call_wrap(api_call_front_str+str(theID)).text
-                #since XML parser docs are basically novels to read and they
-                #have SECURITY VULNERABILITIES I'm going to not use them, dwi
-                #find start of typeName="
-                name_start = api_result.find('typeName="') + len('typeName="')
-                #find end of the name " />   this means we will correctly fetch names even with double quotes
-                name_end_offset = api_result[name_start:].find('" />')
-                name_end = name_start + name_end_offset
-                theName = api_result[name_start:name_end]
-                mail['victim']['shipTypeName'] = theName
-                #and save this result so we don't call CCP again
-                self.ship_lookup[theID] = theName
+            mail['victim']['ship_type_name'] = self.lookup_shipTypeID(theID)
+
+    def lookup_shipTypeID(self, theID):
+        temp_ship_name = self.ship_lookup.get(str(theID), None)
+        if temp_ship_name != None:
+            return temp_ship_name
+        else: #better call CCP example: https://esi.evetech.net/latest/universe/types/603/?datasource=tranquility&language=en-us
+            api_call_front_str = 'https://esi.evetech.net/latest/universe/types/'
+            api_call = api_call_front_str + str(theID) + '/?datasource=tranquility&language=en-us'
+            print('calling CCP: '+ api_call)
+            api_result = self.api_call_wrap(str(api_call)).json()
+            theName = api_result['name']
+            #and save this result so we don't call CCP again
+            self.ship_lookup[str(theID)] = theName
+            return theName
 
     def use_character(self, charid):
         cs = {v:k for k,v in self.character_list.items()}
         charname = cs[charid]
-        self.history = [x for x in self.history if charname in x['our_characters'] or charname == x['victim']['characterName']]
+        self.history = [x for x in self.history if charname in x['our_characters'] or charname == x['victim']['character_name']]
         self.board_name = charname
 
     def write_data_to_file(self):
@@ -288,13 +379,19 @@ class zKillAPI():
             json.dump(self.ship_lookup, outfile)
         with open('out/data/solarsystem_lookup.json', 'w') as outfile:
             json.dump(self.solarsystem_lookup, outfile)
+        with open('out/data/character_lookup.json', 'w') as outfile:
+            json.dump(self.character_lookup, outfile)
+        with open('out/data/corp_lookup.json', 'w') as outfile:
+            json.dump(self.corp_lookup, outfile)
+        with open('out/data/alliance_lookup.json', 'w') as outfile:
+            json.dump(self.alliance_lookup, outfile)
 
     def update_all(self):
         self.update_kill_history()
         self.update_kill_details()
         self.prune_unused_history_fields()
-        self.tag_as_kill_loss_or_friendly_fire()
         self.tag_involved_characters()
+        self.tag_as_kill_loss_or_friendly_fire()
         self.tag_formatted_values()
         self.tag_solarSystemName()
         self.tag_shipTypeID()
@@ -311,7 +408,7 @@ class zKillAPI():
                   'characters':      sorted(self.character_list.items()),
                   'money_lost':      self.kill_sums('row-loss'),
                   'money_killed':    self.kill_sums('row-kill'),
-                  'friendlyfire':    self.kill_counts('row-friendlyfire'),
+                  'friendly_fire':    self.kill_counts('row-friendly_fire'),
                   'character_count': characters,
                   'board_name':   self.board_name}
         return result
@@ -332,8 +429,8 @@ def index():
     zKill.update_all()
     print('update success')
     yield {'charid': None}
-    for x in zKill.character_list.values():
-        yield {'charid': x}
+    #for x in zKill.character_list.values():
+    #    yield {'charid': x}
 
 
 if __name__ == "__main__":
@@ -341,13 +438,4 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
     if len(sys.argv) > 1 and sys.argv[1] == 'build':
         freezer.freeze()
-
-    elif len(sys.argv) > 1 and sys.argv[1] == 'forcezkill':
-        #keep going until first page is empty
-        zKill = zKillAPI()
-        while zKill.update_kill_history() != 1:
-            time.sleep(10)
-        zKill.update_all()
-    else:
-        app.run(debug=True, host='0.0.0.0')
-
+    #app.run(debug=True, host='0.0.0.0')

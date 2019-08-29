@@ -1,148 +1,120 @@
+
 .greytext {
-	color: #ccc;
+  color: #ccc;
 }
-
 .jumbotron {
-	background-size: cover;
+  background-size: cover;
+  background-color: #222;
 }
-
 .jumbotron img {
-	margin-left: auto;
-	margin-right: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
-
 .jumbotron .page-title {
-	text-shadow: 1px 1px #333;
-	color: #2a9fd6;
+  text-shadow: 1px 1px #444;
+  color: #2a9fd6;
 }
-
 .table-kbstats {
-	table-layout: fixed;
+  table-layout: fixed;
 }
-
 .table-kbstats .time-price {
-	width: 8%;
+  width: 8%;
 }
-
 .table-kbstats .ship-icon {
-	width: 8%;
+  width: 8%;
 }
-
 .table-kbstats .ship-icon img {
-	margin: 0 auto;
-	float: none;
+  margin: 0 auto;
+  float: none;
 }
-
 .table-kbstats .solar-system {
-	text-align: center;
-	width: 10%;
-	padding: 8px 0;
+  text-align: center;
+  width: 10%;
+  padding: 8px 0;
 }
-
 .table-kbstats .pilot-info {
-	width: 40%;
+  width: 40%;
 }
-
 .table-kbstats .final-blow-info {
-	width: 40%;
+  width: 40%;
 }
-
 .table-kbstats .involved-info {
-	width: 18%;
+  width: 23%;
 }
-
 .table-kbstats .row-date {
-	background-color: #111;
-	font-weight: normal;
+  background-color: #111;
+  font-weight: normal;
 }
-
 .table-kbstats .row-date:hover {
-	transition: 0.2s ease-in all;
-	background-color: #282828;
+  transition: 0.2s ease-in all;
+  background-color: #282828;
 }
-
 .table-kbstats .row-kill {
-	transition: 0.2s ease-in all;
-	background-color: #194119;
+  transition: 0.2s ease-in all;
+  background-color: #194119;
 }
-
 .table-kbstats .row-kill:nth-child(2n) {
-	background-color: #002c00;
+  background-color: #002c00;
 }
-
 .table-kbstats .row-kill:hover {
-	transition: 0.2s ease-in all;
-	background-color: #004e7a;
+  transition: 0.2s ease-in all;
+  background-color: #004e7a;
 }
-
 .table-kbstats .row-loss {
-	transition: 0.2s ease-in all;
-	background-color: #761919;
+  transition: 0.2s ease-in all;
+  background-color: #761919;
 }
-
 .table-kbstats .row-loss:nth-child(2n) {
-	background-color: #670000;
+  background-color: #670000;
 }
-
 .table-kbstats .row-loss:hover {
-	transition: 0.2s ease-in all;
-	background-color: #dd9300;
+  transition: 0.2s ease-in all;
+  background-color: #dd9300;
 }
-
-.table-kbstats .row-friendlyfire {
-	transition: 0.2s ease-in all;
-	background-color: #aa099a;
+.table-kbstats .row-friendly_fire {
+  transition: 0.2s ease-in all;
+  background-color: #aa099a;
 }
-
-.table-kbstats .row-friendlyfire:nth-child(2n) {
-	background-color: #840778;
+.table-kbstats .row-friendly_fire:nth-child(2n) {
+  background-color: #840778;
 }
-
-.table-kbstats .row-friendlyfire:hover {
-	transition: 0.2s ease-in all;
-	background-color: #0a8bbd;
+.table-kbstats .row-friendly_fire:hover {
+  transition: 0.2s ease-in all;
+  background-color: #0a8bbd;
 }
-
 .table-kbstats .kb-table-header th {
-	text-align: left;
-	padding: 8px 8px;
+  text-align: left;
+  padding: 8px 8px;
 }
-
 .table-kbstats img {
-	float: left;
-	display: block;
-	margin-right: 0.5em;
+  float: left;
+  display: block;
+  margin-right: 0.5em;
 }
-
 .table-kbstats td:last-child {
-	text-align: center;
+  text-align: center;
 }
-
 .table-kbstats .name {
-	display: block;
+  display: block;
 }
-
 @media (max-width: 667px) {
-	.table-kbstats {
-		table-layout: auto;
-	}
-
-	.table-kbstats img {
-		width: 20px;
-		height: 20px;
-	}
+  .table-kbstats {
+    table-layout: auto;
+  }
+  .table-kbstats img {
+    width: 20px;
+    height: 20px;
+  }
 }
-
 table a:not(.btn), .table a:not(.btn) {
-	color: #2a9fd6;
-	text-decoration: none;
-	background: transparent;
+  color: #2a9fd6;
+  text-decoration: none;
+  background: transparent;
 }
-
 #footer {
-	background-color: #151515;
-	color: #ccc;
-	padding: 10px;
-	margin-top: 20px;
-	font-size: 70%;
+  background-color: #151515;
+  color: #ccc;
+  padding: 10px;
+  margin-top: 20px;
+  font-size: 70%;
 }
