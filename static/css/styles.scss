@@ -4,12 +4,13 @@
 }
 .jumbotron {
   background-size: cover;
+  background-color: #222;
   img {
     margin-left: auto;
     margin-right: auto;
   }
   .page-title {
-    text-shadow: 1px 1px #333;
+    text-shadow: 1px 1px #444;
     color: #2a9fd6;
   }
 }
@@ -69,7 +70,7 @@
       background-color: #dd9300;
     }
   }
-  .row-friendlyfire {
+  .row-friendly_fire {
     transition: 0.2s ease-in all;
     background-color: #aa099a;
     &:nth-child(2n) {

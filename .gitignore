@@ -2,6 +2,8 @@
 deploy_key
 deploy_key.pub
 temp/
+try.py
+.web_cache
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
