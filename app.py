@@ -8,6 +8,7 @@ from collections import defaultdict
 
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
+do_file_cache = False
 
 from flask import Flask, render_template
 from flask_frozen import Freezer
@@ -19,9 +20,12 @@ app.config['FREEZER_DESTINATION'] = 'out/build'
 app.config['FREEZER_RELATIVE_URLS'] = True
 
 class zKillAPI():
-    def __init__(self):
-        self.cached_sess = CacheControl(requests.Session(), cache=FileCache('.web_cache'))
-        self.last_call_cache_hit = True
+    def __init__(self, do_file_cache):
+        self.do_file_cache = do_file_cache
+        if self.do_file_cache:
+            self.cached_sess = CacheControl(requests.Session(), cache=FileCache('.web_cache'))
+            self.last_call_cache_hit = True
+
         self.character_list = {}
         self.reverse_character_list = {}
         self.history = {}
@@ -91,11 +95,16 @@ class zKillAPI():
     def api_call_wrap(self, url):
         if type(url) != str:
             raise ValueError('zKill:api_call_wrap was passed a url that was not a string')
-        if self.last_call_cache_hit is False:
-            time.sleep(1) # 'be polite' with requests (cached_sess)
-        api_response = self.cached_sess.get(url)
-        self.last_call_cache_hit = api_response.from_cache
-        return api_response
+        if self.do_file_cache:
+            if self.last_call_cache_hit is False:
+                time.sleep(1) # 'be polite' with requests (cached_sess)
+            api_response = self.cached_sess.get(url)
+            self.last_call_cache_hit = api_response.from_cache
+            return api_response
+        else:
+            time.sleep(1)  # 'be polite' with requests
+            api_response = requests.get(url)
+            return api_response
 
     def update_kill_history(self):
         api_call_frontstr = "http://zkillboard.com/api/characterID/"
@@ -417,7 +426,7 @@ class zKillAPI():
 @app.route('/<int:charid>/')
 def index(charid):
     print('character: '+str(charid))
-    zKill = zKillAPI()
+    zKill = zKillAPI(do_file_cache)
     if charid:
         zKill.use_character(charid)
     return render_template('index.html', **zKill.data)
@@ -425,7 +434,7 @@ def index(charid):
 @freezer.register_generator
 def index():
     print('main build')
-    zKill = zKillAPI()
+    zKill = zKillAPI(do_file_cache)
     zKill.update_all()
     print('update success')
     yield {'charid': None}
@@ -434,8 +443,9 @@ def index():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2 and sys.argv[2] == 'debug':
+    if (len(sys.argv) > 1 and sys.argv[1] == 'debug') or (len(sys.argv) > 2 and sys.argv[2] == 'debug'):
         logging.basicConfig(level=logging.DEBUG)
-    if len(sys.argv) > 1 and sys.argv[1] == 'build':
-        freezer.freeze()
+    if (len(sys.argv) > 1 and sys.argv[1] == 'file_cache') or (len(sys.argv) > 2 and sys.argv[2] == 'file_cache'):
+        do_file_cache = True
+    freezer.freeze()
     #app.run(debug=True, host='0.0.0.0')

@@ -27,7 +27,7 @@ build_normal()
     mkdir -p out/static
 
     # Run our compile script
-    python app.py build
+    python app.py
 }
 
 # Pull requests and commits to other branches shouldn't try to deploy, just build to verify
@@ -54,7 +54,7 @@ git config user.email "duskdragon@gmail.com"
 
 # If there are no changes to the compiled out (e.g. this is a non-website update) then just bail.
 if [[ -z `git diff --exit-code` ]]; then
-    echo "No changes to the webpage on this push; exiting."
+    echo "No changes to pages on this push; exiting."
     exit 0
 fi
 
