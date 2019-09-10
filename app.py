@@ -442,7 +442,7 @@ class zKillAPI():
             json.dump(self.alliance_lookup, outfile)
 
     def update_all(self):
-        #self.update_kill_history()
+        self.update_kill_history()
         self.update_kill_details()
         self.prune_unused_history_fields()
         self.tag_involved_characters()
