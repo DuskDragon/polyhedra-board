@@ -24,7 +24,7 @@ class zKillAPI():
     def __init__(self, do_file_cache):
         self.do_file_cache = do_file_cache
         if self.do_file_cache:
-            self.cached_sess = CacheControl(requests.Session(), cache=FileCache('.web_cache'))
+            self.cached_sess = CacheControl(requests.Session(), cache_etags=False, cache=FileCache('.web_cache'))
             self.last_call_cache_hit = True
 
         self.character_list = {}
@@ -114,6 +114,12 @@ class zKillAPI():
         else:
             time.sleep(1)  # 'be polite' with requests
             api_response = requests.get(url)
+            if api_response.ok == False:
+                time.sleep(5) # assume timeout with one more try after a small wait
+                api_response = requests.get(url)
+                if api_response.ok == False:
+                    #assume we have been locked out
+                    raise ValueError(f'zKill:api_call_wrap api request was given garbage twice: \nurl: {url}\nresponse: {api_response.text}')
         return api_response
 
     def update_kill_history(self):
@@ -499,9 +505,9 @@ def index():
     #build main board
     yield '/'
     # build podkills list
-    yield '/target_pods/'
+    #yield '/target_pods/' # no longer needed
     # build FRT list
-    yield '/target_ships/'
+    #yield '/target_ships/' # no longer needed
 
 @app.route('/')
 def index():
