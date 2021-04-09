@@ -2,7 +2,7 @@ name: deploy-to-gh-pages
 
 on:
   push:
-    branches: 
+    branches:
       - master
   workflow_dispatch:
 
@@ -15,26 +15,28 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v2
-        
+
       - name: Set up Python 3.x
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
           architecture: 'x64'
-          
+
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
-        
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        
+
       - name: Update Polyhedra gh-pages
         shell: bash
         env:
           gh-key: ${{ secrets.DEPLOY_KEY }}
         run: |
+          cd ~
+          mkdir -p temp
           cd $GITHUB_WORKSPACE
           SOURCE_BRANCH="master"
           TARGET_BRANCH="gh-pages"
@@ -60,6 +62,7 @@ jobs:
           if [[ -z `git diff --exit-code` ]]; then echo "No changes to pages on this push; exiting."; exit 0; fi
           git add -A
           git commit -m "Deploy to GitHub Pages: ${SHA}"
+          echo "$gh-key" >> ~/temp/push_key
           eval `ssh-agent -s`
-          ssh-add gh-key
-          git push $SSH_REPO gh-pages
+          ssh-add ~/temp/push_key
+          git push $SSH_REPO $TARGET_BRANCH

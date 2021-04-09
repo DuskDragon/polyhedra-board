@@ -514,15 +514,15 @@ def index():
     print('index')
     return render_template('index.html', **g_zKill.data)
 
-@app.route('/target_pods/')
-def target_pods():
-    print('pods')
-    return render_template('index.html', **g_zKill.pods)
+#@app.route('/target_pods/')
+#def target_pods():
+#    print('pods')
+#    return render_template('index.html', **g_zKill.pods)
 
-@app.route('/target_ships/')
-def target_ships():
-    print('targets')
-    return render_template('index.html', **g_zKill.targets)
+#@app.route('/target_ships/')
+#def target_ships():
+#    print('targets')
+#    return render_template('index.html', **g_zKill.targets)
 
 if __name__ == "__main__":
     if (len(sys.argv) > 1 and sys.argv[1] == 'debug') or (len(sys.argv) > 2 and sys.argv[2] == 'debug'):
