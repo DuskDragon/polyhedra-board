@@ -31,7 +31,8 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         
       - name: Update Polyhedra gh-pages
-        with:
+        shell: bash
+        env:
           gh-key: ${{ secrets.DEPLOY_KEY }}
         run: |
           cd $GITHUB_WORKSPACE
