@@ -1,6 +1,9 @@
 name: deploy-to-gh-pages
 
 on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '3 6 * * *'
   push:
     branches:
       - master
@@ -32,18 +35,14 @@ jobs:
 
       - name: Update Polyhedra gh-pages
         shell: bash
-        env:
-          gh-key: ${{ secrets.DEPLOY_KEY }}
         run: |
-          cd ~
-          mkdir -p temp
           cd $GITHUB_WORKSPACE
           SOURCE_BRANCH="master"
           TARGET_BRANCH="gh-pages"
-          echo "Running ~The Build~"
           REPO=`git config remote.origin.url`
           SSH_REPO=${REPO/https:\/\/github.com\//git@github.com:}
           SHA=`git rev-parse --verify HEAD`
+          echo "Running ~The Build~"
           git clone $REPO out
           cd out
           git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
@@ -57,12 +56,11 @@ jobs:
           cd out/build
           cp -r * ..
           cd ..
+          if [[ -z `git diff --exit-code` ]]; then echo "No changes to pages on this push; exiting."; exit 0; fi
           git config user.name "DuskDragon-gh-pages-Action"
           git config user.email "duskdragon@gmail.com"
-          if [[ -z `git diff --exit-code` ]]; then echo "No changes to pages on this push; exiting."; exit 0; fi
           git add -A
           git commit -m "Deploy to GitHub Pages: ${SHA}"
-          echo "$gh-key" >> ~/temp/push_key
           eval `ssh-agent -s`
-          ssh-add ~/temp/push_key
+          ssh-add - <<< "${{ secrets.DEPLOY_KEY }}"
           git push $SSH_REPO $TARGET_BRANCH
