@@ -21,12 +21,12 @@ app.config['FREEZER_DESTINATION'] = 'out/build'
 app.config['FREEZER_RELATIVE_URLS'] = True
 
 class zKillAPI():
-    def __init__(self, do_file_cache):
+    def __init__(self, do_file_cache, zkill_calls):
         self.do_file_cache = do_file_cache
         if self.do_file_cache:
             self.cached_sess = CacheControl(requests.Session(), cache_etags=False, cache=FileCache('.web_cache'))
             self.last_call_cache_hit = True
-
+        self.zkill_calls = zkill_calls
         self.character_list = {}
         self.reverse_character_list = {}
         self.history = {}
@@ -184,8 +184,11 @@ class zKillAPI():
             pruned_attackers = []
             for attacker in mail['attackers']: #keep only those on character_list or final_blow == True
                 if attacker.get('final_blow', None) or attacker.get('character_id', None) in self.character_list.values():
-                    attacker.pop('securityStatus', None) # drop sec status
+                    attacker.pop('securityStatus', None) # drop zkill sec status
+                    attacker.pop('security_status', None) # drop esi sec status
                     attacker.pop('damage_done', None) # drop raw damage (not ehp)
+                    attacker.pop('ship_type_id', None) # drop ship_type (it's mostly wrong on most mails)
+                    attacker.pop('weapon_type_id', None) # drop weapon_type (it's mostly wrong on most mails)
                     pruned_attackers.append(attacker)
                     #save final_blow to top level location also
                     if attacker.get('final_blow', False):
@@ -315,11 +318,12 @@ class zKillAPI():
 
     def tag_formatted_values(self):
         for mail in self.history:
-            #if formatted_price tag exists, skip this mail
-            if mail.get('formatted_price', None) != None:
-                continue
-            #grab the totalValue
-            mail['formatted_price'] = self.engineering_number_string(mail['zkb']['totalValue'])
+            #if count of minutes into day exists, skip. Used for sorting kills within a day
+            if mail.get('minutes_into_day') == None:
+                mail['minutes_into_day'] = int(mail['killmail_time'][11:13])*60+int(mail['killmail_time'][14:16])
+            #if formatted_price tag exists, skip. Used for final web page output
+            if mail.get('formatted_price') == None:
+                mail['formatted_price'] = self.engineering_number_string(mail['zkb']['totalValue'])
 
     def kill_sums(self, killtype):
         r = sum(self.verify_kill(x, killtype) for x in self.history)
@@ -342,17 +346,18 @@ class zKillAPI():
 
     def kills_by_date(self):
         kills = defaultdict(list)
-        for kill in reversed(self.history):
+        for kill in self.history:
             kills[kill['killmail_time'][0:10]].append(kill)
         kills_by_day = sorted(kills.items(), key=lambda x: x[0], reverse=True)
         result = []
         for day, killmails in kills_by_day:
-            result.append((day, self.format_date(day), killmails))
+            reversed_killmails = sorted(killmails, key=lambda x: x['minutes_into_day'], reverse=True)
+            result.append((day, self.format_date(day), reversed_killmails))
         return result
 
     def pod_kills_by_date(self):
         kills = defaultdict(list)
-        for kill in reversed(self.history):
+        for kill in self.history:
             if kill['row_type'] != 'row-kill':
                 continue
             if kill['victim'].get('alliance_id',0) not in self.pod_alliances:
@@ -365,25 +370,28 @@ class zKillAPI():
         kills_by_day = sorted(kills.items(), key=lambda x: x[0], reverse=True)
         result = []
         for day, killmails in kills_by_day:
-            result.append((day, self.format_date(day), killmails))
+            reversed_killmails = sorted(killmails, key=lambda x: x['minutes_into_day'], reverse=True)
+            result.append((day, self.format_date(day), reversed_killmails))
         return result
 
     def target_kills_by_date(self):
         kills = defaultdict(list)
-        for kill in reversed(self.history):
+        for kill in self.history:
             if kill['row_type'] != 'row-kill':
                 continue
             if kill['victim'].get('alliance_id',0) not in self.target_alliances:
                 continue
             if kill['victim'].get('ship_type_id',0) in self.target_banned_types:
                 continue
-            if kill.get('final_blow',{}).get('character_name','') not in self.character_list.keys():
-                continue
+            #uncomment if being used for final blow only tracking
+            #if kill.get('final_blow',{}).get('character_name','') not in self.character_list.keys():
+            #    continue
             kills[kill['killmail_time'][0:10]].append(kill)
         kills_by_day = sorted(kills.items(), key=lambda x: x[0], reverse=True)
         result = []
         for day, killmails in kills_by_day:
-            result.append((day, self.format_date(day), killmails))
+            reversed_killmails = sorted(killmails, key=lambda x: x['minutes_into_day'], reverse=True)
+            result.append((day, self.format_date(day), reversed_killmails))
         return result
 
     def tag_solarSystemName(self):
@@ -448,7 +456,8 @@ class zKillAPI():
             json.dump(self.alliance_lookup, outfile)
 
     def update_all(self):
-        self.update_kill_history()
+        if self.zkill_calls:
+            self.update_kill_history()
         self.update_kill_details()
         self.prune_unused_history_fields()
         self.tag_involved_characters()
@@ -497,7 +506,7 @@ class zKillAPI():
                   'money_killed':    self.kill_sums('row-kill'),
                   'friendly_fire':   self.kill_counts('row-friendly_fire'),
                   'character_count': characters,
-                  'board_name':      self.board_name+" Target Ships"}
+                  'board_name':      self.board_name+" Targets"}
         return result
 
 @freezer.register_generator
@@ -506,8 +515,8 @@ def index():
     yield '/'
     # build podkills list
     #yield '/target_pods/' # no longer needed
-    # build FRT list
-    #yield '/target_ships/' # no longer needed
+    # build ships list
+    yield '/target_ships/'
 
 @app.route('/')
 def index():
@@ -519,20 +528,24 @@ def index():
 #    print('pods')
 #    return render_template('index.html', **g_zKill.pods)
 
-#@app.route('/target_ships/')
-#def target_ships():
-#    print('targets')
-#    return render_template('index.html', **g_zKill.targets)
+@app.route('/target_ships/')
+def target_ships():
+    print('targets')
+    return render_template('index.html', **g_zKill.targets)
 
 if __name__ == "__main__":
-    if (len(sys.argv) > 1 and sys.argv[1] == 'debug') or (len(sys.argv) > 2 and sys.argv[2] == 'debug'):
+    if (len(sys.argv) > 1 and sys.argv[1] == 'debug') or (len(sys.argv) > 2 and sys.argv[2] == 'debug') or (len(sys.argv) > 3 and sys.argv[3] == 'debug'):
         logging.basicConfig(level=logging.DEBUG)
-    if (len(sys.argv) > 1 and sys.argv[1] == 'file_cache') or (len(sys.argv) > 2 and sys.argv[2] == 'file_cache'):
-        do_file_cache = True
-    else:
+    if (len(sys.argv) > 1 and sys.argv[1] == 'no_file_cache') or (len(sys.argv) > 2 and sys.argv[2] == 'no_file_cache') or (len(sys.argv) > 3 and sys.argv[3] == 'no_file_cache'):
         do_file_cache = False
+    else:
+        do_file_cache = True
+    if (len(sys.argv) > 1 and sys.argv[1] == 'no_zkill_calls') or (len(sys.argv) > 2 and sys.argv[2] == 'no_zkill_calls') or (len(sys.argv) > 3 and sys.argv[3] == 'no_zkill_calls'):
+        zkill_calls = False
+    else:
+        zkill_calls = True
     print('main build')
-    zKill = zKillAPI(do_file_cache)
+    zKill = zKillAPI(do_file_cache, zkill_calls)
     zKill.update_all()
     print('update success')
     print('latest ID: '+str(zKill.kills_by_date()[0][2][0]['killmail_id']))

@@ -50,7 +50,7 @@ jobs:
           rm -rf out/build/* || exit 0
           mkdir -p out/data
           mkdir -p out/static
-          python app.py
+          python app.py no_file_cache
           cp .gitignore out/.gitignore
           cp README.md out/README.md
           cd out/build
